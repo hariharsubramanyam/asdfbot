@@ -40,8 +40,6 @@ public class SAttackState extends State {
 					goToLocation(rc.senseEnemyHQLocation());
 				}
 			}
-
-			rc.yield();
 		}
 		catch(Exception e){
 			e.printStackTrace();
