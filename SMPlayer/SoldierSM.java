@@ -12,14 +12,14 @@ public class SoldierSM extends StateMachine {
 	
 	@Override
 	public void step() {
+		
 		for(Transition t : this.currentTransitions)
 			if(t.isTriggered()){
 				currentState.doExitAct();
 				this.goToState(t.targetState);
 				break;
 			}
-		currentState.doAction();
-		
+		currentState.doAction();		
 	}
 
 	@Override
@@ -28,14 +28,14 @@ public class SoldierSM extends StateMachine {
 	}
 	
 	@Override
-	public Transition[] goToState(int stateID){
+	public void goToState(int stateID){
 		this.currentState = SMConstants.getState(this, stateID);
 		this.currentState.doEntryAct();
 		int[] transitionIDs = SMConstants.getTransitionsForState(stateID);
 		Transition[] transitions = new Transition[transitionIDs.length];
 		for(int i = 0; i < transitionIDs.length; i++)
 			transitions[i] = SMConstants.getTransition(this, transitionIDs[i]);
-		return transitions;
+		this.currentTransitions = transitions;
 	}
 	
 

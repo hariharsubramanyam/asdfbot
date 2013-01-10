@@ -10,6 +10,6 @@ public abstract class StateMachine {
 	
 	public abstract void step();	
 	public abstract RobotController getRC();
-	public abstract Transition[] goToState(int stateID);
+	public abstract void goToState(int stateID);
 	
 }

@@ -24,6 +24,7 @@ public class RobotPlayer {
 				else{
 					sm.step();
 				}
+				rc.yield();
 			}
 			catch(Exception e){
 				e.printStackTrace();
