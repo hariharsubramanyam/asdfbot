@@ -6,7 +6,7 @@ public class RobotPlayer {
 	
 	public static RobotController rc;
 	public static MapLocation rallyPoint;
-	public static SoldierSM sm;
+	public static StateMachine sm;
 	
 	public static void run(RobotController rc) throws GameActionException{
 		

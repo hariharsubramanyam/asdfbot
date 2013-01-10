@@ -35,18 +35,16 @@ public class SWaitState extends State{
 					}
 					goToLocation(closestEnemy);
 				}
-
 				else{
 					goToLocation(RobotPlayer.rallyPoint);
 				}
 			}
-			rc.yield();
 		}
 		catch(Exception e){
 			e.printStackTrace();
 		}
 	}
-	
+
 	private void goToLocation(MapLocation place)
 			throws GameActionException {
 		int dist = rc.getLocation().distanceSquaredTo(place);
