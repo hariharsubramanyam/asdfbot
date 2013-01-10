@@ -12,7 +12,7 @@ public class RobotPlayer {
 		while(true){
 			try{
 				if(rc.getType() == RobotType.SOLDIER && rc.isActive()){
-					Robot[] enemyRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam().opponent());
+					Robot[] enemyRobots = (Robot[]) rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam().opponent());
 					if(enemyRobots.length > 0){
 						int closestDist = 10000000;
 						MapLocation closestEnemy = null;
