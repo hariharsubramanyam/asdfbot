@@ -41,7 +41,7 @@ public class MetricsModule implements IModule {
 		this.energon = this.rc.getEnergon();
 		this.location = this.rc.getLocation();
 		this.shields = this.rc.getShields();
-		this.teamPower = this.rc.getTeamPower();
+		//this.teamPower = this.rc.getTeamPower();
 		this.robotActive = this.rc.isActive();
 		this.hasActed = true;
 	}
@@ -82,9 +82,9 @@ public class MetricsModule implements IModule {
 		return shields;
 	}
 
-	public double getTeamPower() {
-		return teamPower;
-	}
+	//public double getTeamPower() {
+	//	return teamPower;
+	//}
 
 	public RobotType getRobotType() {
 		return robotType;

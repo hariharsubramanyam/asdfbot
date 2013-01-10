@@ -89,7 +89,7 @@ public class AStarPathFinder {
 		return neighbors;
 	}
 
-	public GridSquare pathfind(GridSquare start, GridSquare goal){
+	//public GridSquare pathfind(GridSquare start, GridSquare goal){
 		
-	}
+	//}
 }

@@ -27,7 +27,6 @@ public class HQController implements GeneralController{
 				e.printStackTrace();
 			}
 		}
-		
 	}
 
 }

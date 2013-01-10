@@ -9,9 +9,9 @@ public class RobotPlayer {
 	public static void run(RobotController rc) throws GameActionException{
 		try{
 			switch(rc.getType()){
-				case SOLDIER: controller = new SoldierController(rc); break;
+				//case SOLDIER: controller = new SoldierController(rc); break;
 				case HQ: controller = new HQController(rc); break;
-				case ARTILLERY: controller = new ArtilleryController(rc); break;
+				//case ARTILLERY: controller = new ArtilleryController(rc); break;
 			}//endswitch
 		}//endtry
 		catch(Exception e){e.printStackTrace();}//endcatch
