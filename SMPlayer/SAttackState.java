@@ -74,9 +74,6 @@ public class SAttackState extends State {
 				if(firstMine != null){
 					rc.defuseMine(rc.getLocation().add(firstMine));
 				}
-				else{
-					rc.move(dir.opposite());
-				}
 			}
 		}
 	}
