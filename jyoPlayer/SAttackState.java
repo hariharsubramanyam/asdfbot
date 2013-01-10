@@ -1,29 +1,18 @@
-package SMPlayer;
+package jyoPlayer;
 
-import awesomestRobotPlayer.RobotPlayer;
-import battlecode.common.Clock;
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.Robot;
-import battlecode.common.RobotController;
-import battlecode.common.RobotInfo;
-import battlecode.common.RobotType;
+import battlecode.common.*;
 
-public class SWaitState extends State{
+public class SAttackState extends State {
 
-	MapLocation rallyPoint;
-
-	public SWaitState(StateMachine rootSM){
-		this.stateID = SMConstants.SWAITSTATE;
+	public SAttackState(StateMachine rootSM){
+		this.stateID = SMConstants.SATTACKSTATE;
 		this.rootSM = rootSM;
 		this.rc = rootSM.getRC();
 	}
 
+	
 	@Override
-	public void doEntryAct() {
-		rallyPoint = findRallyPoint();
-	}
+	public void doEntryAct() {}
 
 	@Override
 	public void doExitAct() {}
@@ -48,23 +37,17 @@ public class SWaitState extends State{
 					goToLocation(closestEnemy);
 				}
 				else{
-					goToLocation(rallyPoint);
+					goToLocation(rc.senseEnemyHQLocation());
 				}
 			}
+
+			rc.yield();
 		}
 		catch(Exception e){
 			e.printStackTrace();
 		}
 	}
-
-	private MapLocation findRallyPoint() {
-		MapLocation enemyLoc = rc.senseEnemyHQLocation();
-		MapLocation ourLoc = rc.senseHQLocation();
-		int x = (enemyLoc.x + 3*ourLoc.x)/4;
-		int y = (enemyLoc.y + 3*ourLoc.y)/4;
-		return new MapLocation(x,y);
-	}
-
+	
 	private void goToLocation(MapLocation place)
 			throws GameActionException {
 		int dist = rc.getLocation().distanceSquaredTo(place);
@@ -96,7 +79,5 @@ public class SWaitState extends State{
 			}
 		}
 	}
-
-
 
 }
