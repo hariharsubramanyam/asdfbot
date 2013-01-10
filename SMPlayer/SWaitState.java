@@ -12,8 +12,6 @@ import battlecode.common.RobotType;
 
 public class SWaitState extends State{
 
-	MapLocation rallyPoint;
-
 	public SWaitState(StateMachine rootSM){
 		this.stateID = SMConstants.SWAITSTATE;
 		this.rootSM = rootSM;
@@ -21,9 +19,7 @@ public class SWaitState extends State{
 	}
 
 	@Override
-	public void doEntryAct() {
-		rallyPoint = findRallyPoint();
-	}
+	public void doEntryAct() {}
 
 	@Override
 	public void doExitAct() {}
@@ -48,21 +44,13 @@ public class SWaitState extends State{
 					goToLocation(closestEnemy);
 				}
 				else{
-					goToLocation(rallyPoint);
+					goToLocation(RobotPlayer.rallyPoint);
 				}
 			}
 		}
 		catch(Exception e){
 			e.printStackTrace();
 		}
-	}
-
-	private MapLocation findRallyPoint() {
-		MapLocation enemyLoc = rc.senseEnemyHQLocation();
-		MapLocation ourLoc = rc.senseHQLocation();
-		int x = (enemyLoc.x + 3*ourLoc.x)/4;
-		int y = (enemyLoc.y + 3*ourLoc.y)/4;
-		return new MapLocation(x,y);
 	}
 
 	private void goToLocation(MapLocation place)

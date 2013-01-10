@@ -17,8 +17,9 @@ public class RobotPlayer {
 				if(sm==null){
 					if (rc.isActive()) {
 						Direction dir = rc.getLocation().directionTo(rc.senseEnemyHQLocation());
-						if (rc.canMove(dir))
+						if (rc.canMove(dir)){
 							rc.spawn(dir);
+						}
 					}
 				}
 				else{
