@@ -5,11 +5,13 @@ package hariharPlayer;
 
 public class SMConstants {
 	// State ids
-	public final static int SWAITSTATE = 1;
-	public final static int SATTACKSTATE = 2;
+	public final static int SWAITSTATE = 0;
+	public final static int SATTACKSTATE = 1;
+	
+	public final static int HSPAWNSTATE = 0;
 	
 	// Transition ids
-	public final static int SROUND200TRANSITION = -1;
+	public final static int SROUND200TRANSITION = 0;
 
 	// Return a new state object corresponding to an id
 	public static State getState(StateMachine rootSM, int stateVal){

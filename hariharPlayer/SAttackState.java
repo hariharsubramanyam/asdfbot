@@ -50,11 +50,11 @@ public class SAttackState extends State {
 						}
 					}
 					// go to closest enemy
-					goToLocation(closestEnemy);
+					NavigationManager.goToLocation(closestEnemy,rc);
 				}
 				else{
 					// if we can't find enemies, go to enemy HQ
-					goToLocation(rc.senseEnemyHQLocation());
+					NavigationManager.goToLocation(rc.senseEnemyHQLocation(),rc);
 				}
 			}
 		}
@@ -64,38 +64,7 @@ public class SAttackState extends State {
 	}
 	
 	
-	// try to move in the direction of the target
-	// if we can't, see what other spaces are open
-	// if our path is blocked entirely by mines, defuse the one that lies on the direct path to the target 
-	private void goToLocation(MapLocation place)
-			throws GameActionException {
-		
-		int dist = rc.getLocation().distanceSquaredTo(place);
-		if(dist > 0){
-			int[] directionOffsets = {0,1,-1,2,-2};	// lower magnitude offsets don't change our direction much
-			Direction dir = rc.getLocation().directionTo(place);	// get direction straight to target
-			Direction firstMine = null;
-			boolean hasMoved = false;
-			for (int d: directionOffsets){
-				// apply the offset to get direction (start with direction straight to target, and change if necessary)
-				Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
-				if(rc.canMove(lookingAtCurrently)){		// if the path is open, take it
-					if(rc.senseMine(rc.getLocation().add(lookingAtCurrently))==null){
-						rc.move(lookingAtCurrently);
-						hasMoved = true;
-						break;
-					}
-					else if(firstMine == null){	// detect the first mine
-						firstMine = Direction.values()[lookingAtCurrently.ordinal()];
-					}
-				}
-			}
-			if(!hasMoved){	// if we haven't moved at all, defuse the mine on the most direct path to the target
-				if(firstMine != null){
-					rc.defuseMine(rc.getLocation().add(firstMine));
-				}
-			}
-		}
-	}
+	
+	
 
 }

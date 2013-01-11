@@ -1,5 +1,5 @@
 /**
- * Robot execution begins here
+* Robot execution begins here
  */
 package hariharPlayer;
 

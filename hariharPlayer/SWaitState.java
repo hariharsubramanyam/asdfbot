@@ -54,10 +54,10 @@ public class SWaitState extends State{
 							closestEnemy = aRobotInfo.location;
 						}
 					}
-					goToLocation(closestEnemy);
+					NavigationManager.goToLocation(closestEnemy,rc);
 				}
 				else{
-					goToLocation(rallyPoint);
+					NavigationManager.goToLocation(rallyPoint,rc);
 				}
 			}
 		}
@@ -73,40 +73,6 @@ public class SWaitState extends State{
 		int x = (enemyLoc.x + 3*ourLoc.x)/4;
 		int y = (enemyLoc.y + 3*ourLoc.y)/4;
 		return new MapLocation(x,y);
-	}
-
-	
-	// see SAttackState's goToLocation method - it is identical
-	private void goToLocation(MapLocation place)
-			throws GameActionException {
-		int dist = rc.getLocation().distanceSquaredTo(place);
-		if(dist > 0){
-			int[] directionOffsets = {0,1,-1,2,-2};
-			Direction dir = rc.getLocation().directionTo(place);
-			Direction firstMine = null;
-			boolean hasMoved = false;
-			for (int d: directionOffsets){
-				Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
-				if(rc.canMove(lookingAtCurrently)){
-					if(rc.senseMine(rc.getLocation().add(lookingAtCurrently))==null){
-						rc.move(lookingAtCurrently);
-						hasMoved = true;
-						break;
-					}
-					else if(firstMine == null){
-						firstMine = Direction.values()[lookingAtCurrently.ordinal()];
-					}
-				}
-			}
-			if(!hasMoved){
-				if(firstMine != null){
-					rc.defuseMine(rc.getLocation().add(firstMine));
-				}
-				else{
-					rc.move(dir.opposite());
-				}
-			}
-		}
 	}
 
 
