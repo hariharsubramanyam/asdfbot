@@ -1,7 +1,7 @@
 /**
  * Robot execution begins here
  */
-package SMPlayer;
+package hariharPlayer;
 
 import battlecode.common.*;
 

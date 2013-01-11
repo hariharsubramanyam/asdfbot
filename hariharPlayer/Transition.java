@@ -2,7 +2,7 @@
  * This is an abstract class, so don't instantiate it
  * A transition takes us from the source state to the target state if it is triggered
  */
-package SMPlayer;
+package hariharPlayer;
 
 public abstract class Transition {
 	

@@ -2,7 +2,7 @@
  * State in soldier state machine
  * Behavior - go to closest enemy robot or opponent HQ
  */
-package SMPlayer;
+package hariharPlayer;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;

@@ -2,7 +2,7 @@
  * This is an abstract class, so don't instantiate it
  * State in the state machine
  */
-package SMPlayer;
+package hariharPlayer;
 
 import battlecode.common.*;
 

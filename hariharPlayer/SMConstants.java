@@ -1,7 +1,7 @@
 /**
  * constants for state ids and transition ids
  */
-package SMPlayer;
+package hariharPlayer;
 
 public class SMConstants {
 	// State ids

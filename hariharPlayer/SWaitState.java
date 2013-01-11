@@ -1,42 +1,47 @@
 /**
- * State in soldier state machine
- * Behavior - go to closest enemy robot or opponent HQ
+ * State for soldier state machine
+ * Behavior - go to closest enemy or rally point
  */
-package SMPlayer;
+package hariharPlayer;
 
+import awesomestRobotPlayer.RobotPlayer;
+import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.Robot;
+import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
+import battlecode.common.RobotType;
 
-public class SAttackState extends State {
+public class SWaitState extends State{
+	
+	// this is where our robots group together
+	MapLocation rallyPoint;
 
-	// basic constructor
-	public SAttackState(StateMachine rootSM){
-		this.stateID = SMConstants.SATTACKSTATE;
+	// constructor
+	public SWaitState(StateMachine rootSM){
+		this.stateID = SMConstants.SWAITSTATE;
 		this.rootSM = rootSM;
 		this.rc = rootSM.getRC();
 	}
-	
-	
-	// does nothing for entry
-	@Override
-	public void doEntryAct() {}
 
-	// does nothing for exit
+	// when we enter this state, we need to figure out where the rally point is
+	@Override
+	public void doEntryAct() {
+		rallyPoint = findRallyPoint();
+	}
+
+	// no exit work
 	@Override
 	public void doExitAct() {}
 
-	// go to (and attack) the closest enemy in sight. If there's no enemy in sight, go to (and attack) the enemy HQ
+	// see SAttackState's doAction - it's very similar. Here, we go to the closest enemy. If there's no nearby enemy, go to the rally point
 	@Override
 	public void doAction() {
-		// need this try-catch or Eclipse gets mad
 		try{
 			if(rc.isActive()){
-				// get visible enemies
 				Robot[] enemyRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam().opponent());
-				// find the closest enemy
 				if(enemyRobots.length > 0){
 					int closestDist = 10000000;
 					MapLocation closestEnemy = null;
@@ -49,12 +54,10 @@ public class SAttackState extends State {
 							closestEnemy = aRobotInfo.location;
 						}
 					}
-					// go to closest enemy
 					goToLocation(closestEnemy);
 				}
 				else{
-					// if we can't find enemies, go to enemy HQ
-					goToLocation(rc.senseEnemyHQLocation());
+					goToLocation(rallyPoint);
 				}
 			}
 		}
@@ -62,40 +65,50 @@ public class SAttackState extends State {
 			e.printStackTrace();
 		}
 	}
+
+	// rally point is a weighted average of our HQ position and opponent HQ position
+	private MapLocation findRallyPoint() {
+		MapLocation enemyLoc = rc.senseEnemyHQLocation();
+		MapLocation ourLoc = rc.senseHQLocation();
+		int x = (enemyLoc.x + 3*ourLoc.x)/4;
+		int y = (enemyLoc.y + 3*ourLoc.y)/4;
+		return new MapLocation(x,y);
+	}
+
 	
-	
-	// try to move in the direction of the target
-	// if we can't, see what other spaces are open
-	// if our path is blocked entirely by mines, defuse the one that lies on the direct path to the target 
+	// see SAttackState's goToLocation method - it is identical
 	private void goToLocation(MapLocation place)
 			throws GameActionException {
-		
 		int dist = rc.getLocation().distanceSquaredTo(place);
 		if(dist > 0){
-			int[] directionOffsets = {0,1,-1,2,-2};	// lower magnitude offsets don't change our direction much
-			Direction dir = rc.getLocation().directionTo(place);	// get direction straight to target
+			int[] directionOffsets = {0,1,-1,2,-2};
+			Direction dir = rc.getLocation().directionTo(place);
 			Direction firstMine = null;
 			boolean hasMoved = false;
 			for (int d: directionOffsets){
-				// apply the offset to get direction (start with direction straight to target, and change if necessary)
 				Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
-				if(rc.canMove(lookingAtCurrently)){		// if the path is open, take it
+				if(rc.canMove(lookingAtCurrently)){
 					if(rc.senseMine(rc.getLocation().add(lookingAtCurrently))==null){
 						rc.move(lookingAtCurrently);
 						hasMoved = true;
 						break;
 					}
-					else if(firstMine == null){	// detect the first mine
+					else if(firstMine == null){
 						firstMine = Direction.values()[lookingAtCurrently.ordinal()];
 					}
 				}
 			}
-			if(!hasMoved){	// if we haven't moved at all, defuse the mine on the most direct path to the target
+			if(!hasMoved){
 				if(firstMine != null){
 					rc.defuseMine(rc.getLocation().add(firstMine));
+				}
+				else{
+					rc.move(dir.opposite());
 				}
 			}
 		}
 	}
+
+
 
 }

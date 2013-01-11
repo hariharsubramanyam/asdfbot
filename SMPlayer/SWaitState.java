@@ -1,3 +1,7 @@
+/**
+ * State for soldier state machine
+ * Behavior - go to closest enemy or rally point
+ */
 package SMPlayer;
 
 import awesomestRobotPlayer.RobotPlayer;
@@ -11,23 +15,28 @@ import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
 
 public class SWaitState extends State{
-
+	
+	// this is where our robots group together
 	MapLocation rallyPoint;
 
+	// constructor
 	public SWaitState(StateMachine rootSM){
 		this.stateID = SMConstants.SWAITSTATE;
 		this.rootSM = rootSM;
 		this.rc = rootSM.getRC();
 	}
 
+	// when we enter this state, we need to figure out where the rally point is
 	@Override
 	public void doEntryAct() {
 		rallyPoint = findRallyPoint();
 	}
 
+	// no exit work
 	@Override
 	public void doExitAct() {}
 
+	// see SAttackState's doAction - it's very similar. Here, we go to the closest enemy. If there's no nearby enemy, go to the rally point
 	@Override
 	public void doAction() {
 		try{
@@ -57,6 +66,7 @@ public class SWaitState extends State{
 		}
 	}
 
+	// rally point is a weighted average of our HQ position and opponent HQ position
 	private MapLocation findRallyPoint() {
 		MapLocation enemyLoc = rc.senseEnemyHQLocation();
 		MapLocation ourLoc = rc.senseHQLocation();
@@ -65,6 +75,8 @@ public class SWaitState extends State{
 		return new MapLocation(x,y);
 	}
 
+	
+	// see SAttackState's goToLocation method - it is identical
 	private void goToLocation(MapLocation place)
 			throws GameActionException {
 		int dist = rc.getLocation().distanceSquaredTo(place);

@@ -3,7 +3,7 @@
  * To: SATTACKSTATE
  * Condition: RoundNum > 200
  */
-package SMPlayer;
+package hariharPlayer;
 
 import battlecode.common.Clock;
 
