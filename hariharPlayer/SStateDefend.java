@@ -4,26 +4,20 @@
  */
 package hariharPlayer;
 
-import awesomestRobotPlayer.RobotPlayer;
 import battlecode.common.Clock;
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
-import battlecode.common.Robot;
-import battlecode.common.RobotController;
-import battlecode.common.RobotInfo;
-import battlecode.common.RobotType;
 
-public class SWaitState extends State{
+
+public class SStateDefend extends State{
 	
 	// this is where our robots group together
 	MapLocation rallyPoint;
 
 	// constructor
-	public SWaitState(StateMachine rootSM){
-		this.stateID = SMConstants.SWAITSTATE;
+	public SStateDefend(StateMachine rootSM){
+		this.stateID = SMConstants.S_STATE_DEFEND;
 		this.rootSM = rootSM;
-		this.rc = rootSM.getRC();
+		this.rc = rootSM.rc;
 	}
 
 	// when we enter this state, we need to figure out where the rally point is
@@ -41,24 +35,12 @@ public class SWaitState extends State{
 	public void doAction() {
 		try{
 			if(rc.isActive()){
-				Robot[] enemyRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam().opponent());
-				if(enemyRobots.length > 0){
-					int closestDist = 10000000;
-					MapLocation closestEnemy = null;
-					for(int i = 0; i < enemyRobots.length; i++){
-						Robot aRobot = enemyRobots[i];
-						RobotInfo aRobotInfo = rc.senseRobotInfo(aRobot);
-						int dist = aRobotInfo.location.distanceSquaredTo(rc.getLocation());
-						if(dist < closestDist){
-							closestDist = dist;;
-							closestEnemy = aRobotInfo.location;
-						}
-					}
-					NavigationManager.goToLocation(closestEnemy,rc);
-				}
-				else{
-					NavigationManager.goToLocation(rallyPoint,rc);
-				}
+				MapLocation nearestEnemyLoc = ((SoldierSM)rootSM).dataManager.getLocationOfNearestEnemy(20);
+				if(nearestEnemyLoc == null)
+					((SoldierSM)rootSM).aStarManager.setTarget(rallyPoint);
+				else
+					((SoldierSM)rootSM).aStarManager.setTarget(nearestEnemyLoc);
+				((SoldierSM)rootSM).aStarManager.move();
 			}
 		}
 		catch(Exception e){
@@ -73,6 +55,19 @@ public class SWaitState extends State{
 		int x = (enemyLoc.x + 3*ourLoc.x)/4;
 		int y = (enemyLoc.y + 3*ourLoc.y)/4;
 		return new MapLocation(x,y);
+	}
+
+	@Override
+	public State checkTransitions() {
+		int newStateID = -1;
+		
+		if(Clock.getRoundNum() > 200)
+			newStateID = SMConstants.S_STATE_ATTACK;
+		
+		if(newStateID != -1)
+			return this.changeState(newStateID);
+		else
+			return this;
 	}
 
 
