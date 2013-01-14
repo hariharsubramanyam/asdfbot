@@ -6,13 +6,29 @@ import battlecode.common.*;
 
 
 public class SoldierSM extends StateMachine {
-
-	// Construct and set initial state
+	
+	public DataManager dataManager;
+	public NavigationManager aStarManager;
+	
 	public SoldierSM(RobotController rc){
 		this.rc = rc;
-		// SWAITSTATE = hang around near our HQ and group together, SATTACKSTATE = attack nearest enemy or enemy HQ
-		this.stateIDs = new int[]{SMConstants.SWAITSTATE, SMConstants.SATTACKSTATE};
-		this.goToState(SMConstants.SWAITSTATE);	// start in wait state
+		this.dataManager = new DataManager(this);
+		this.aStarManager = new NavigationManager(this);
+		this.enterInitialState();
+	}
+	
+	@Override
+	public void step(){
+		dataManager.update(false, false, false);
+		aStarManager.update();
+		currentState = currentState.checkTransitions(); // perform any necesary transitions and update the state
+		currentState.doAction();			// perform the behavior described by this state
+	}
+
+	@Override
+	public void enterInitialState() {
+		this.currentState = SMConstants.getState(this, SMConstants.S_STATE_DEFEND);
+		this.currentState.doEntryAct();
 	}
 
 }
