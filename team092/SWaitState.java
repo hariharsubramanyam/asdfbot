@@ -2,17 +2,16 @@
  * State for soldier state machine
  * Behavior - go to closest enemy or rally point
  */
-package jyoPlayer;
+package team092;
 
 
 import battlecode.common.*;
-import jyoPlayer.NavigationManager.*;
+
 
 public class SWaitState extends State{
 	
 	// this is where our robots group together
 	MapLocation rallyPoint;
-	public Direction movedFrom;
 
 	// constructor
 	public SWaitState(StateMachine rootSM){
@@ -116,7 +115,6 @@ public class SWaitState extends State{
 
 	
 	// see SAttackState's goToLocation method - it is identical
-
 	private void goToLocation(MapLocation place)
 			throws GameActionException {
 		int dist = rc.getLocation().distanceSquaredTo(place);
@@ -130,17 +128,10 @@ public class SWaitState extends State{
 				Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
 				if(rc.canMove(lookingAtCurrently)){
 					if((teamOfMine = (rc.senseMine(rc.getLocation().add(lookingAtCurrently))))==null){
-						if (this.movedFrom != lookingAtCurrently.opposite()){
-							this.movedFrom = lookingAtCurrently;
-							rc.move(lookingAtCurrently);
-							hasMoved = true;
-							break;
-						}
-						else{
-							continue;
+						rc.move(lookingAtCurrently);
+						hasMoved = true;
+						break;
 					}
-				}
-
 					else if(firstMine == null && teamOfMine!=rc.getTeam()){
 						firstMine = Direction.values()[lookingAtCurrently.ordinal()];
 					}

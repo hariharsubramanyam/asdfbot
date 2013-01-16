@@ -1,7 +1,7 @@
 /**
  * Robot execution begins here
  */
-package jyoPlayer;
+package team092;
 
 import battlecode.common.*;
 

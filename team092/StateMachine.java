@@ -2,7 +2,7 @@
  * This is an abstract class, so don't instantiate it.
  * State machine. HQSM, SoldierSM, and ArtillerySM should derive from this
  */
-package jyoPlayer;
+package team092;
 import battlecode.common.*;
 
 public abstract class StateMachine {

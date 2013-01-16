@@ -1,7 +1,7 @@
 /**
  * State machine for the soldier
  */
-package jyoPlayer;
+package team092;
 import battlecode.common.*;
 
 

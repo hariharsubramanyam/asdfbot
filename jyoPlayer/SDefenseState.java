@@ -2,26 +2,26 @@ package jyoPlayer;
 
 import battlecode.common.*;
 
-public class SAttackState extends State {
+public class SDefenseState extends State{
 	
-	public Direction movedFrom;
+	public static MapLocation rallyPoint;
 	
-	public SAttackState(StateMachine rootSM){
-		this.stateID = SMConstants.SATTACKSTATE;
+	public SDefenseState(StateMachine rootSM){
+		this.stateID = SMConstants.SWAITSTATE;
 		this.rootSM = rootSM;
 		this.rc = rootSM.getRC();
 	}
-	
-
-	
-	@Override
-	public void doEntryAct(){}
 
 	@Override
-	public void doExitAct(){}
+	public void doEntryAct() {
+		rallyPoint = findRallyPoint();
+	}
 
 	@Override
-	public void doAction(){
+	public void doExitAct() {}
+
+	@Override
+	public void doAction() {
 		try{
 			if(rc.isActive()){
 				Robot[] enemyRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam().opponent());
@@ -36,17 +36,19 @@ public class SAttackState extends State {
 							closestDist = dist;;
 							closestEnemy = aRobotInfo.location;
 						}
-					goToLocation(closestEnemy);
 					}
+					goToLocation(closestEnemy);
 				}
 				else{
-					goToLocation(rc.senseEnemyHQLocation());
+					goToLocation(rallyPoint);
 				}
 			}
-		}catch(Exception e){e.printStackTrace();}
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
-	
 	private void goToLocation(MapLocation place)
 			throws GameActionException {
 		int dist = rc.getLocation().distanceSquaredTo(place);
@@ -56,22 +58,14 @@ public class SAttackState extends State {
 			Direction firstMine = null;
 			boolean hasMoved = false;
 			for (int d: directionOffsets){
-				Team teamOfMine = null;
 				Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
 				if(rc.canMove(lookingAtCurrently)){
-					if((teamOfMine = (rc.senseMine(rc.getLocation().add(lookingAtCurrently))))==null){
-						if (this.movedFrom != lookingAtCurrently.opposite()){
-							this.movedFrom = lookingAtCurrently;
-							rc.move(lookingAtCurrently);
-							hasMoved = true;
-							break;
-						}
-						else{
-							continue;
+					if(rc.senseMine(rc.getLocation().add(lookingAtCurrently))==null){
+						rc.move(lookingAtCurrently);
+						hasMoved = true;
+						break;
 					}
-				}
-
-					else if(firstMine == null && teamOfMine!=rc.getTeam()){
+					else if(firstMine == null){
 						firstMine = Direction.values()[lookingAtCurrently.ordinal()];
 					}
 				}
@@ -80,10 +74,22 @@ public class SAttackState extends State {
 				if(firstMine != null){
 					rc.defuseMine(rc.getLocation().add(firstMine));
 				}
-				else if (place.distanceSquaredTo(rc.getLocation())>4){
-					rc.layMine();
+				else{
+					rc.move(dir.opposite());
 				}
 			}
 		}
 	}
+	
+	private MapLocation findRallyPoint() {
+		MapLocation enemyLoc = rc.senseEnemyHQLocation();
+		MapLocation ourLoc = rc.senseHQLocation();
+		int x = (enemyLoc.x + 3*ourLoc.x)/4;
+		int y = (enemyLoc.y + 3*ourLoc.y)/4;
+		return new MapLocation(x,y);
+	}
+
+
+	
+	
 }
