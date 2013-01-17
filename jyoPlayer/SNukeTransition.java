@@ -1,6 +1,5 @@
 package jyoPlayer;
 
-import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 
 public class SNukeTransition extends Transition {

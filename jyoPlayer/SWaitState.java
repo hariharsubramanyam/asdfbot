@@ -10,7 +10,7 @@ import battlecode.common.*;
 public class SWaitState extends State{
 
 	// this is where our robots group together
-	MapLocation rallyPoint;
+	public MapLocation rallyPoint;
 
 	// constructor
 	public SWaitState(StateMachine rootSM){
@@ -41,12 +41,12 @@ public class SWaitState extends State{
 					MapLocation closestEnemy = closestRobot(enemyRobots);
 					goToLocation(closestEnemy, myLocation);
 				}
-				else if(myLocation.distanceSquaredTo(rallyPoint)<8){
+/*				else if(myLocation.distanceSquaredTo(rallyPoint)<8){
 					if (goodPlace(rc.getLocation())&&rc.senseMine(rc.getLocation())==null)
 						rc.layMine();
 					else
 						goToLocation(rallyPoint, myLocation);
-				}
+				}*/
 				else{
 					goToLocation(rallyPoint, myLocation);
 				}
@@ -56,20 +56,42 @@ public class SWaitState extends State{
 			e.printStackTrace();
 		}
 	}
-
-	private boolean goodPlace(MapLocation location) {
-//		return ((3*location.x+location.y)%8==0);//pickaxe with gaps
-//		return ((2*location.x+location.y)%5==0);//pickaxe without gaps
-		return ((location.x+location.y)%2==0);//checkerboard
+	
+	private MapLocation findRallyPoint(){
+		MapLocation[] myEncamp = rc.senseAlliedEncampmentSquares();
+		MapLocation enemyHQ = rc.senseEnemyHQLocation();
+		int closestDist = 10000000;
+		MapLocation closestEncampment = null;
+		for(MapLocation ml : myEncamp){
+			int dist = ml.distanceSquaredTo(rc.getLocation());
+			if(dist < closestDist){
+				closestDist = dist;
+				closestEncampment = ml;
+			}
+		}
+/*		if(closestEncampment.distanceSquaredTo(rc.senseHQLocation()) < closestEncampment.distanceSquaredTo(rc.senseEnemyHQLocation())){
+			MapLocation rallyPoint = new MapLocation((2*closestEncampment.x+enemyHQ.x)/3,(2*closestEncampment.y+enemyHQ.y)/3);
+			return rallyPoint;
+		}
+		else{*/
+		MapLocation rallyPoint = new MapLocation((3*closestEncampment.x+enemyHQ.x)/4,(3*closestEncampment.y+enemyHQ.y)/4);
+		return rallyPoint;
+/*		}*/
 	}
+
+/*	private boolean goodPlace(MapLocation location) {
+//		return ((3*location.x+location.y)%8==0);//pickaxe with gaps
+		return ((2*location.x+location.y)%5==0);//pickaxe without gaps
+		return ((location.x+location.y)%2==0);//checkerboard
+	}*/
 	// rally point is a weighted average of our HQ position and opponent HQ position
-	private MapLocation findRallyPoint() {
+/*	private MapLocation findRallyPoint() {
 		MapLocation enemyLoc = rc.senseEnemyHQLocation();
 		MapLocation ourLoc = rc.senseHQLocation();
 		int x = (enemyLoc.x + 2*ourLoc.x)/3;
 		int y = (enemyLoc.y + 2*ourLoc.y)/3;
 		return new MapLocation(x,y);
-	}
+	}*/
 
 	public MapLocation closestRobot(Robot[] Robots) throws GameActionException{
 		int closestDist = 10000000;

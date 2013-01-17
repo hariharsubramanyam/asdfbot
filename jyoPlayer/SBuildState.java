@@ -38,12 +38,12 @@ public class SBuildState extends State{
 				Robot[] nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class, 14,rc.getTeam().opponent());
 				MapLocation[] encamp = rc.senseEncampmentSquares(rc.getLocation(), 10, Team.NEUTRAL);
 				MapLocation[] myEncamp = rc.senseAlliedEncampmentSquares();
-				MapLocation closestAlly = null;
 				MapLocation closestEncamp = null;
 				for (MapLocation mL : encamp){
 					int closestEncampDis = 100000;
 					if(mL.distanceSquaredTo(myLocation)==0){
 						rc.captureEncampment(RobotType.ARTILLERY);
+						rallyPoint = new MapLocation((3*myLocation.x+rc.senseEnemyHQLocation().x)/4,(3*myLocation.y*rc.senseEnemyHQLocation().y)/4);
 						break;
 					}
 					else{
@@ -52,17 +52,8 @@ public class SBuildState extends State{
 						}
 					}
 				}
-				System.out.println("Nearby Encampments: "+ encamp.length);
-				int closestDist = 10000000;
-				for(Robot r : alliedRobots){
-					RobotInfo aRobotInfo = rc.senseRobotInfo(r);
-					int dist = aRobotInfo.location.distanceSquaredTo(rc.getLocation());
-					if(dist < closestDist){
-						closestDist = dist;;
-						closestAlly = aRobotInfo.location;
-					}
-				}
-				if(enemyRobots.length > 0){
+/*				System.out.println("Nearby Encampments: "+ encamp.length);
+*/				if(enemyRobots.length > 0){
 					int closestDistance = 10000000;
 					MapLocation closestEnemy = null;
 					for(int i = 0; i < enemyRobots.length; i++){
@@ -78,7 +69,7 @@ public class SBuildState extends State{
 
 
 				}
-				else if (encamp.length>0 && myEncamp.length < 5){
+				else if (encamp.length>0 && myEncamp.length < 3){
 					if(closestEncamp !=null)
 						goStraightToLocation(closestEncamp, myLocation);
 				}
@@ -239,16 +230,16 @@ public class SBuildState extends State{
 		if(dist > 0){
 			int[] directionOffsets = {0,1,-1};
 			Direction dir = myLocation.directionTo(place);
-			boolean hasMoved = false;
-			for (int d: directionOffsets){
+/*			boolean hasMoved = false;
+*/			for (int d: directionOffsets){
 				Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
 				if(rc.canMove(lookingAtCurrently)){
 					if((rc.senseMine(myLocation.add(lookingAtCurrently)))==null){
 						if (this.movedFrom != lookingAtCurrently.opposite()){
 							this.movedFrom = lookingAtCurrently;
 							rc.move(lookingAtCurrently);
-							hasMoved = true;
-							break;
+/*							hasMoved = true;
+*/							break;
 						}
 						else{
 							continue;

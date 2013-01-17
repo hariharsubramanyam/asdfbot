@@ -15,7 +15,7 @@ public abstract class StateMachine {
 	public void step(){
 		// see if we have to leave this current state
 		for(Transition t : this.currentTransitions)
-			if(t.isTriggered()){
+			if(t.isTriggered() && t.sourceState == currentState.stateID){
 				currentState.doExitAct();	// if we must leave, finish up any work in this state
 				this.goToState(t.targetState);	// and go to the next one
 				break;

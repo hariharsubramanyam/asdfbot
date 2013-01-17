@@ -28,6 +28,9 @@ public class SAttackState extends State {
 				MapLocation alliedHQ = rc.senseHQLocation();
 				Robot[] enemyRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam().opponent());
 				Robot[] alliedRobots = rc.senseNearbyGameObjects(Robot.class, 100000,rc.getTeam());
+				Robot[] nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class,14,rc.getTeam().opponent());
+				Robot[] nearbyAlliedRobots = rc.senseNearbyGameObjects(Robot.class, 14,rc.getTeam());
+
 				MapLocation[] myEncamp = rc.senseAlliedEncampmentSquares();
 				if(enemyRobots.length > 0){
 					int closestDist = 10000000;
@@ -50,8 +53,8 @@ public class SAttackState extends State {
 							closestAlly = aRobotInfo.location;
 						}
 					}
-					if(alliedRobots.length >= enemyRobots.length){
-						flank(closestEnemy, closestAlly);
+					if(nearbyAlliedRobots.length >= nearbyEnemyRobots.length){
+						goToLocation(closestEnemy);
 					}
 					else if(rc.getLocation().distanceSquaredTo(alliedHQ) >= rc.getLocation().distanceSquaredTo(enemyHQ)){
 						MapLocation closestEncampment = null;
