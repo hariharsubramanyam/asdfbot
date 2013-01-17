@@ -10,9 +10,11 @@ public abstract class StateMachine {
 	RobotController rc;
 	int[] stateIDs;
 	State currentState;
+	DataManager dataManager;
 	
 	public void step(){
-		currentState = currentState.checkTransitions(); // perform any necesary transitions and update the state
+		dataManager.update(false,false,false);
+		currentState = currentState.checkTransitions(); // perform any necessary transitions and update the state
 		currentState.doAction();			// perform the behavior described by this state
 	}
 	

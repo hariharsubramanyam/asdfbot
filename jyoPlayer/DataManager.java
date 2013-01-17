@@ -1,4 +1,4 @@
-package tempPlayer;
+package jyoPlayer;
 
 import java.util.ArrayList;
 
@@ -35,6 +35,7 @@ public class DataManager {
 	public MapLocation[] alliedEncampments;
 	public MapLocation[] enemyMines;
 	public MapLocation[] myMines;
+
 	
 	public DataManager(StateMachine sm){
 		this.sm = sm;
@@ -101,6 +102,14 @@ public class DataManager {
 				enemies.add(r);
 		return enemies.toArray(new Robot[0]);
 	}
+	
+	public Robot[] getNearbyAllies(){
+		ArrayList<Robot> allies = new ArrayList<Robot>();
+		for(Robot r : this.nearbyRobots)
+			if(r.getTeam() == this.team)
+				allies.add(r);
+		return allies.toArray(new Robot[0]);
+	}
 
 	public MapLocation getLocationOfNearestEnemy(int distThreshold){
 		Robot[] enemies = this.getNearbyEnemies();
@@ -126,5 +135,31 @@ public class DataManager {
 		if(closestDist > distThreshold)
 			return null;
 		return nearestEnemyLoc;
+	}
+	
+	public MapLocation getLocationOfNearestAlly(int distThreshold){
+		Robot[] allies = this.getNearbyAllies();
+		
+		MapLocation nearestAllyLoc = null;
+		int closestDist = 100000;
+		
+		MapLocation allyLoc;
+		int dist;
+		
+		for(Robot e : allies)
+			try {
+				allyLoc = rc.senseRobotInfo(e).location;
+				dist = allyLoc.distanceSquaredTo(this.location);
+				if(dist < closestDist){
+					closestDist = dist;
+					nearestAllyLoc = allyLoc;
+				}
+			} catch (GameActionException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		if(closestDist > distThreshold)
+			return null;
+		return nearestAllyLoc;
 	}
 }

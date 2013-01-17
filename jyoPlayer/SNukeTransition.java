@@ -1,15 +1,21 @@
 package jyoPlayer;
 
 import battlecode.common.Clock;
+import battlecode.common.GameActionException;
 
-public class SRound200Transition extends Transition {
+public class SNukeTransition extends Transition {
 	
-	public SRound200Transition(StateMachine rootSM){
+	public SNukeTransition(StateMachine rootSM){
 		this.rootSM = rootSM;
 		this.sourceState = SMConstants.SWAITSTATE;
 		this.targetState = SMConstants.SATTACKSTATE;
 	}
 	
+	public boolean nukeHalfDone;
+	
+	public void NukeHalfDone() throws GameActionException{
+		nukeHalfDone = rootSM.rc.senseEnemyNukeHalfDone();
+	}
 	
 
 	@Override
@@ -25,7 +31,7 @@ public class SRound200Transition extends Transition {
 
 	@Override
 	public boolean isTriggered() {
-		return (Clock.getRoundNum()%200 == 0);
+		return nukeHalfDone;
 	}
 
 }

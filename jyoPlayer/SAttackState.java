@@ -24,23 +24,52 @@ public class SAttackState extends State {
 	public void doAction(){
 		try{
 			if(rc.isActive()){
+				MapLocation enemyHQ = rc.senseEnemyHQLocation();
+				MapLocation alliedHQ = rc.senseHQLocation();
 				Robot[] enemyRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam().opponent());
+				Robot[] alliedRobots = rc.senseNearbyGameObjects(Robot.class, 100000,rc.getTeam());
+				MapLocation[] myEncamp = rc.senseAlliedEncampmentSquares();
 				if(enemyRobots.length > 0){
 					int closestDist = 10000000;
 					MapLocation closestEnemy = null;
-					for(int i = 0; i < enemyRobots.length; i++){
-						Robot aRobot = enemyRobots[i];
-						RobotInfo aRobotInfo = rc.senseRobotInfo(aRobot);
+					MapLocation closestAlly = null;
+					for(Robot r : enemyRobots){
+						RobotInfo aRobotInfo = rc.senseRobotInfo(r);
 						int dist = aRobotInfo.location.distanceSquaredTo(rc.getLocation());
 						if(dist < closestDist){
 							closestDist = dist;;
 							closestEnemy = aRobotInfo.location;
 						}
-					goToLocation(closestEnemy);
+					}
+					closestDist = 10000000;
+					for(Robot r : alliedRobots){
+						RobotInfo aRobotInfo = rc.senseRobotInfo(r);
+						int dist = aRobotInfo.location.distanceSquaredTo(rc.getLocation());
+						if(dist < closestDist){
+							closestDist = dist;;
+							closestAlly = aRobotInfo.location;
+						}
+					}
+					if(alliedRobots.length >= enemyRobots.length){
+						flank(closestEnemy, closestAlly);
+					}
+					else if(rc.getLocation().distanceSquaredTo(alliedHQ) >= rc.getLocation().distanceSquaredTo(enemyHQ)){
+						MapLocation closestEncampment = null;
+						for(MapLocation ml : myEncamp){
+							int dist = ml.distanceSquaredTo(rc.getLocation());
+							if(dist < closestDist){
+								closestDist = dist;;
+								closestEncampment = ml;
+							}
+						}
+						retreat(closestEnemy,closestEncampment);
+					}
+					else{
+						flank(closestEnemy, closestAlly);
 					}
 				}
 				else{
-					goToLocation(rc.senseEnemyHQLocation());
+					goToLocation(enemyHQ);
 				}
 			}
 		}catch(Exception e){e.printStackTrace();}
@@ -80,10 +109,57 @@ public class SAttackState extends State {
 				if(firstMine != null){
 					rc.defuseMine(rc.getLocation().add(firstMine));
 				}
-				else if (place.distanceSquaredTo(rc.getLocation())>4){
+/*				else if (place.distanceSquaredTo(rc.getLocation())>4){
 					rc.layMine();
-				}
+				}*/
 			}
+		}
+	}
+	
+	private void flank(MapLocation closestEnemy, MapLocation closestAlly)
+			throws GameActionException{
+		Direction direnemy = rc.getLocation().directionTo(closestEnemy);
+		Direction dirally = rc.getLocation().directionTo(closestAlly);
+		int[] directionOffsets = {1,-1,0};
+		boolean hasmoved = false;
+		for(int d : directionOffsets){
+			Direction lookingAtCurrently = Direction.values()[(direnemy.ordinal()+d+8)%8];
+			if(rc.canMove(lookingAtCurrently)){
+				if(((rc.senseMine(rc.getLocation().add(lookingAtCurrently))))==null && lookingAtCurrently != dirally){
+					rc.move(lookingAtCurrently);
+					hasmoved = true;
+				}
+				else
+					continue;
+			}
+			else
+				continue;
+		}
+		if(!hasmoved){
+			goToLocation(closestEnemy);
+		}
+	}
+	
+	private void retreat(MapLocation closestEnemy, MapLocation closestEncampment)
+			throws GameActionException{
+		Direction direnemy = rc.getLocation().directionTo(closestEnemy);
+		int[] directionOffsets = {4,-3,3,-2,2};
+		boolean hasmoved = false;
+		for(int d : directionOffsets){
+			Direction lookingAtCurrently = Direction.values()[(direnemy.ordinal()+d+8)%8];
+			if(rc.canMove(lookingAtCurrently)){
+				if(((rc.senseMine(rc.getLocation().add(lookingAtCurrently))))==null){
+					rc.move(lookingAtCurrently);
+					hasmoved = true;
+				}
+				else
+					continue;
+			}
+			else
+				continue;
+		}
+		if(!hasmoved){
+			goToLocation(closestEncampment);
 		}
 	}
 }
