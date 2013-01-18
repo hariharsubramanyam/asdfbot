@@ -4,6 +4,7 @@ import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.Robot;
+import battlecode.common.Clock;
 
 public class HDefaultState extends State{
 
@@ -57,7 +58,7 @@ public class HDefaultState extends State{
 				int[] directionOffsets = {0,1,-1,2,-2,3,-3,4};
 				for(int d : directionOffsets){
 					Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
-					if (rc.canMove(lookingAtCurrently)){
+					if (rc.canMove(lookingAtCurrently) && Clock.getRoundNum()>0){
 						rc.spawn(lookingAtCurrently);
 						break;
 					}
