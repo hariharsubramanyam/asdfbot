@@ -66,7 +66,7 @@ public class SBuildState extends State{
 					}
 				}
 /*				System.out.println("Nearby Encampments: "+ encamp.length);
-*/				if(enemyRobots.length > 0){
+*/				if(nearbyEnemyRobots.length > 0){
 					int closestDistance = 10000000;
 					MapLocation closestEnemy = null;
 					for(int i = 0; i < enemyRobots.length; i++){
