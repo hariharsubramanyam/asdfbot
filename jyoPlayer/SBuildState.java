@@ -10,7 +10,16 @@ import battlecode.common.*;
 public class SBuildState extends State{
 
 	public MapLocation rallyPoint;
-
+	public MapLocation enemyHQ;
+	public MapLocation alliedHQ;
+	public MapLocation myLocation;
+	public Robot[] alliedRobots;
+	public Robot[] enemyRobots;
+	public Robot[] nearbyEnemyRobots;
+	public MapLocation[] encamp;
+	public MapLocation[] myEncamp;
+	public MapLocation closestEncamp;
+	
 	// constructor
 	public SBuildState(StateMachine rootSM){
 		this.stateID = SMConstants.SBUILDSTATE;
@@ -32,15 +41,17 @@ public class SBuildState extends State{
 	public void doAction() {
 		try{
 			if(rc.isActive()){
-				MapLocation enemyHQ = rc.senseEnemyHQLocation();
-				MapLocation alliedHQ = rc.senseHQLocation();
-				MapLocation myLocation = rc.getLocation();
-				Robot[] alliedRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam());
-				Robot[] enemyRobots = rc.senseNearbyGameObjects(Robot.class, 100000,rc.getTeam().opponent());
-				Robot[] nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class, 14,rc.getTeam().opponent());
-				MapLocation[] encamp = rc.senseEncampmentSquares(rc.getLocation(), 10, Team.NEUTRAL);
-				MapLocation[] myEncamp = rc.senseAlliedEncampmentSquares();
-				MapLocation closestEncamp = null;
+				if(enemyHQ == null)
+					enemyHQ = rc.senseEnemyHQLocation();
+				if(alliedHQ == null)
+					alliedHQ = rc.senseHQLocation();
+				myLocation = rc.getLocation();
+				alliedRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam());
+				enemyRobots = rc.senseNearbyGameObjects(Robot.class, 100000,rc.getTeam().opponent());
+				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class, 14,rc.getTeam().opponent());
+				encamp = rc.senseEncampmentSquares(rc.getLocation(), PlayerConstants.NEARBY_ENCAMPMENT_DIST_SQUARED, Team.NEUTRAL);
+				myEncamp = rc.senseAlliedEncampmentSquares();
+				closestEncamp = null;
 				for (MapLocation mL : encamp){
 					int closestEncampDis = 100000;
 					if(mL.distanceSquaredTo(myLocation)==0 && mL.distanceSquaredTo(rc.senseHQLocation())>4){
@@ -128,7 +139,9 @@ public class SBuildState extends State{
 	private boolean goodPlace(MapLocation location) {
 //		return ((3*location.x+location.y)%8==0);//pickaxe with gaps
 //		return ((2*location.x+location.y)%5==0);//pickaxe without gaps
-		return ((location.x+location.y)%2==0);//checkerboard
+//		return ((location.x+location.y)%2==0);//checkerboard
+		int d2 = location.distanceSquaredTo(alliedHQ);
+		return (d2>1 && d2<=64);
 	}
 	//Movement system
 	private void freeGo(MapLocation target, Robot[] allies,Robot[] enemies,Robot[] nearbyEnemies,MapLocation myLocation, MapLocation enemyHQ, MapLocation alliedHQ) throws GameActionException {
@@ -228,10 +241,10 @@ public class SBuildState extends State{
 			Direction firstMine = null;
 			boolean hasMoved = false;
 			for (int d: directionOffsets){
-				Team teamOfMine = null;
 				Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
 				if(rc.canMove(lookingAtCurrently)){
-					if((teamOfMine = (rc.senseMine(myLocation.add(lookingAtCurrently))))==null){
+					Team teamOfMine = rc.senseMine(myLocation.add(lookingAtCurrently));
+					if(teamOfMine == null || teamOfMine == rc.getTeam()){
 						if (this.movedFrom != lookingAtCurrently.opposite()){
 							this.movedFrom = lookingAtCurrently;
 							rc.move(lookingAtCurrently);

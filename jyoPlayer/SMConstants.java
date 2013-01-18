@@ -1,9 +1,13 @@
 package jyoPlayer;
 
 public class SMConstants {
+	
+	
 	public final static int SWAITSTATE = 1;
 	public final static int SATTACKSTATE = 2;
 	public final static int SBUILDSTATE = 3;
+	
+	public final static int HDEFAULTSTATE = 4;
 	
 	public final static int SROUND200TRANSITION = -1;
 	public final static int SNUKETRANSITION = -2;
@@ -15,6 +19,7 @@ public class SMConstants {
 		case SWAITSTATE: return new SWaitState(rootSM);
 		case SATTACKSTATE: return new SAttackState(rootSM);
 		case SBUILDSTATE: return new SBuildState(rootSM);
+		case HDEFAULTSTATE: return new HDefaultState(rootSM);
 		default: return null;
 		}
 	}
@@ -34,7 +39,8 @@ public class SMConstants {
 */		switch(stateID){
 		case SWAITSTATE: return new int[]{SROUND200TRANSITION,SNUKETRANSITION};
 		case SATTACKSTATE: return new int[]{};
-		case SBUILDSTATE: return new int[]{SBUILDNUKETRANSITION,SRALLYTRANSITION};
+		case SBUILDSTATE: return new int[]{SBUILDNUKETRANSITION};
+		case HDEFAULTSTATE: return new int[]{};
 		default: return null;
 		}
 	}

@@ -41,12 +41,6 @@ public class SWaitState extends State{
 					MapLocation closestEnemy = closestRobot(enemyRobots);
 					goToLocation(closestEnemy, myLocation);
 				}
-/*				else if(myLocation.distanceSquaredTo(rallyPoint)<8){
-					if (goodPlace(rc.getLocation())&&rc.senseMine(rc.getLocation())==null)
-						rc.layMine();
-					else
-						goToLocation(rallyPoint, myLocation);
-				}*/
 				else{
 					goToLocation(rallyPoint, myLocation);
 				}

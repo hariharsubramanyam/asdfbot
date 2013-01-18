@@ -29,8 +29,8 @@ public class SAttackState extends State {
 				MapLocation myLocation = rc.getLocation();
 				Robot[] alliedRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam());
 				Robot[] enemyRobots = rc.senseNearbyGameObjects(Robot.class, 100000,rc.getTeam().opponent());
-				Robot[] nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class, 14,rc.getTeam().opponent());
-				Robot[] nearbyAlliedRobots = rc.senseNearbyGameObjects(Robot.class, 14,rc.getTeam());
+				Robot[] nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class, PlayerConstants.NEARBY_ENEMY_DIST,rc.getTeam().opponent());
+				Robot[] nearbyAlliedRobots = rc.senseNearbyGameObjects(Robot.class, PlayerConstants.NEARBY_ALLY_DIST,rc.getTeam());
 				MapLocation[] myEncamp = rc.senseAlliedEncampmentSquares();
 				if(enemyRobots.length > 0){
 					int closestDist = 10000000;
@@ -65,7 +65,8 @@ public class SAttackState extends State {
 								closestEncampment = ml;
 							}
 						}
-						freeGo(closestEncampment,alliedRobots,enemyRobots,nearbyEnemyRobots,myLocation,enemyHQ,alliedHQ);
+						goToLocation(closestEncampment);
+						//goToLocation(getHQCenterOfMassBroadcast());
 					}
 					else{
 						goToLocation(closestEnemy);
@@ -76,6 +77,17 @@ public class SAttackState extends State {
 				}
 			}
 		}catch(Exception e){e.printStackTrace();}
+	}
+	
+	public MapLocation getHQCenterOfMassBroadcast(){
+		try {
+			String msg = "" + this.rc.readBroadcast(PlayerConstants.HQ_CENTER_OF_MASS_CHANNEL);
+			return new MapLocation(Integer.parseInt(msg.substring(1, 5)),Integer.parseInt(msg.substring(6)));
+		} catch (GameActionException e) {
+			e.printStackTrace();
+			return null;
+		}
+		
 	}
 	
 	//Movement system

@@ -16,6 +16,8 @@ public class RobotPlayer {
 		try{
 			if(rc.getType()==RobotType.SOLDIER)
 				sm = new SoldierSM(rc);
+			else if(rc.getType() == RobotType.HQ)
+				sm = new HQSM(rc);
 		}catch(Exception ex){ex.printStackTrace();}
 		
 		
