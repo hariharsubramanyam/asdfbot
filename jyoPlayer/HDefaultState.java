@@ -50,10 +50,10 @@ public class HDefaultState extends State{
 	public void doAction() {
 		try{
 			if(this.rc.isActive()){
-				MapLocation teamCM = this.getTeamCenterOfMass();
-				this.rc.setIndicatorString(0, teamCM.toString());
-				if(teamCM != null)
-					this.sendCenterOfMassMessage(teamCM);
+//				MapLocation teamCM = this.getTeamCenterOfMass();
+//				this.rc.setIndicatorString(0, teamCM.toString());
+//				if(teamCM != null)
+//					this.sendCenterOfMassMessage(teamCM);
 				Direction dir = rc.getLocation().directionTo(rc.senseEnemyHQLocation());
 				int[] directionOffsets = {0,1,-1,2,-2,3,-3,4};
 				for(int d : directionOffsets){

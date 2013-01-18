@@ -75,28 +75,25 @@ public class SBuildState extends State{
 					int closestEncampDis2 = 100000;
 					int closestEncampDis3 = 100000;
 					if(mL.equals(myLocation) && mL.distanceSquaredTo(alliedHQ)>4){
-						rc.captureEncampment(RobotType.ARTILLERY);
+						rc.captureEncampment(RobotType.SUPPLIER);
 						rallyPoint = new MapLocation((3*myLocation.x+rc.senseEnemyHQLocation().x)/4,(3*myLocation.y*rc.senseEnemyHQLocation().y)/4);
 						break;
 					}
 					else{
 						if(mL.distanceSquaredTo(myLocation) < closestEncampDis && mL.distanceSquaredTo(alliedHQ)>4){
+							closestEncampDis2 = closestEncampDis;
 							closestEncampDis = mL.distanceSquaredTo(myLocation);
 							closestEncamp = mL;
-							continue;
 						}
 						else if(mL.distanceSquaredTo(myLocation) < closestEncampDis2 && mL.distanceSquaredTo(alliedHQ)>4){
+							closestEncampDis3 = closestEncampDis2;
 							closestEncampDis2 = mL.distanceSquaredTo(myLocation);
 							closestEncamp2 = mL;
-							continue;
 						}
 						else if(mL.distanceSquaredTo(myLocation) < closestEncampDis3 && mL.distanceSquaredTo(alliedHQ)>4){
 							closestEncampDis3 = mL.distanceSquaredTo(myLocation);
 							closestEncamp3 = mL;
-							continue;
 						}
-						else
-							continue;
 					}
 				}
 				if(closestEncamp != null)
