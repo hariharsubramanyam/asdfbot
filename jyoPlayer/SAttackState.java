@@ -32,7 +32,7 @@ public class SAttackState extends State {
 				Robot[] nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class, PlayerConstants.NEARBY_ENEMY_DIST,rc.getTeam().opponent());
 				Robot[] nearbyAlliedRobots = rc.senseNearbyGameObjects(Robot.class, PlayerConstants.NEARBY_ALLY_DIST,rc.getTeam());
 				MapLocation[] myEncamp = rc.senseAlliedEncampmentSquares();
-				if(enemyRobots.length > 0){
+				if(nearbyEnemyRobots.length > 0){
 					int closestDist = 10000000;
 					MapLocation closestEnemy = null;
 					MapLocation closestAlly = null;
