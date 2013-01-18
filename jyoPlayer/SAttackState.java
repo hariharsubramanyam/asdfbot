@@ -137,6 +137,7 @@ public class SAttackState extends State {
 		}
 	}
 	
+	//Movement system
 
 	private void goToLocation(MapLocation place)
 			throws GameActionException {

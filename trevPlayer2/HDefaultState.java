@@ -1,10 +1,10 @@
-package jyoPlayer;
+package trevPlayer2;
 
+import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.Robot;
-import battlecode.common.Clock;
 
 public class HDefaultState extends State{
 
@@ -49,16 +49,16 @@ public class HDefaultState extends State{
 	@Override
 	public void doAction() {
 		try{
-			if(this.rc.isActive()){
-//				MapLocation teamCM = this.getTeamCenterOfMass();
-//				this.rc.setIndicatorString(0, teamCM.toString());
-//				if(teamCM != null)
-//					this.sendCenterOfMassMessage(teamCM);
+			if(this.rc.isActive()&&Clock.getRoundNum()>0){
+				MapLocation teamCM = this.getTeamCenterOfMass();
+				this.rc.setIndicatorString(0, teamCM.toString());
+				if(teamCM != null)
+					this.sendCenterOfMassMessage(teamCM);
 				Direction dir = rc.getLocation().directionTo(rc.senseEnemyHQLocation());
 				int[] directionOffsets = {0,1,-1,2,-2,3,-3,4};
 				for(int d : directionOffsets){
 					Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
-					if (rc.canMove(lookingAtCurrently) && Clock.getRoundNum()>0){
+					if (rc.canMove(lookingAtCurrently)){
 						rc.spawn(lookingAtCurrently);
 						break;
 					}
