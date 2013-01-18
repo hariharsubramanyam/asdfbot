@@ -2,7 +2,7 @@
  * State for soldier state machine
  * Behavior - go to closest enemy or rally point
  */
-package jyoPlayer;
+package layingMines;
 
 
 import java.util.ArrayList;
