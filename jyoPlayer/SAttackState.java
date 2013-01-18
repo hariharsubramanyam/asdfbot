@@ -148,10 +148,10 @@ public class SAttackState extends State {
 			Direction firstMine = null;
 			boolean hasMoved = false;
 			for (int d: directionOffsets){
-				Team teamOfMine = null;
 				Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
+				Team teamOfMine = rc.senseMine(rc.getLocation().add(lookingAtCurrently));
 				if(rc.canMove(lookingAtCurrently)){
-					if((teamOfMine = (rc.senseMine(rc.getLocation().add(lookingAtCurrently))))==null){
+					if(teamOfMine == null || teamOfMine == this.rc.getTeam()){
 						if (this.movedFrom != lookingAtCurrently.opposite()){
 							this.movedFrom = lookingAtCurrently;
 							rc.move(lookingAtCurrently);
