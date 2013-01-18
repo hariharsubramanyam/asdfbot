@@ -43,7 +43,7 @@ public class SBuildState extends State{
 	@Override
 	public void doExitAct() {}
 
-	// see SAttackState's doAction - it's very similar. Here, we go to the closest enemy. If there's no nearby enemy, go to the rally point
+	// see SAttackState's doAction -  it's very similar. Here, we go to the closest enemy. If there's no nearby enemy, go to the rally point
 	@Override
 	public void doAction() {
 		try{
