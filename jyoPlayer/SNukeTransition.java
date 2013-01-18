@@ -9,13 +9,6 @@ public class SNukeTransition extends Transition {
 		this.sourceState = SMConstants.SWAITSTATE;
 		this.targetState = SMConstants.SATTACKSTATE;
 	}
-	
-	public boolean nukeHalfDone;
-	
-	public void NukeHalfDone() throws GameActionException{
-		nukeHalfDone = rootSM.rc.senseEnemyNukeHalfDone();
-	}
-	
 
 	@Override
 	public int getSourceStateID() {
@@ -30,7 +23,9 @@ public class SNukeTransition extends Transition {
 
 	@Override
 	public boolean isTriggered() {
-		return nukeHalfDone;
+		try {
+			return rootSM.rc.senseEnemyNukeHalfDone();
+		} catch (GameActionException e) {return false;}
 	}
 
 }
