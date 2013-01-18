@@ -41,6 +41,7 @@ public class SBuildState extends State{
 	public void doAction() {
 		try{
 			if(rc.isActive()){
+				this.rc.setIndicatorString(0, "Build State");
 				if(enemyHQ == null)
 					enemyHQ = rc.senseEnemyHQLocation();
 				if(alliedHQ == null)
@@ -55,7 +56,7 @@ public class SBuildState extends State{
 				for (MapLocation mL : encamp){
 					int closestEncampDis = 100000;
 					if(mL.distanceSquaredTo(myLocation)==0 && mL.distanceSquaredTo(rc.senseHQLocation())>4){
-						rc.captureEncampment(RobotType.ARTILLERY);
+						rc.captureEncampment(RobotType.GENERATOR);
 						rallyPoint = new MapLocation((3*myLocation.x+rc.senseEnemyHQLocation().x)/4,(3*myLocation.y*rc.senseEnemyHQLocation().y)/4);
 						break;
 					}
@@ -228,7 +229,8 @@ public class SBuildState extends State{
 			}
 		}
 		return closestEnemy;
-	}	
+	}
+	
 	// see SAttackState's goToLocation method - it is identical
 	public Direction movedFrom = null;
 
