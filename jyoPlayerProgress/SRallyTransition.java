@@ -1,16 +1,16 @@
-package jyoPlayer;
+package jyoPlayerProgress;
 
 import battlecode.common.Clock;
 
-public class SRound200Transition extends Transition {
-
-	public SRound200Transition(StateMachine rootSM){
+public class SRallyTransition extends Transition {
+	
+	public SRallyTransition(StateMachine rootSM){
 		this.rootSM = rootSM;
-		this.sourceState = SMConstants.SWAITSTATE;
-		this.targetState = SMConstants.SATTACKSTATE;
+		this.sourceState = SMConstants.SBUILDSTATE;
+		this.targetState = SMConstants.SWAITSTATE;
 	}
-
-
+	
+	
 
 	@Override
 	public int getSourceStateID() {
@@ -25,7 +25,7 @@ public class SRound200Transition extends Transition {
 
 	@Override
 	public boolean isTriggered() {
-		return (Clock.getRoundNum()%300 == 0);
+		return ((Clock.getRoundNum()+50)%300 == 0);
 	}
 
 }

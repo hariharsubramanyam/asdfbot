@@ -1,4 +1,4 @@
-package jyoPlayer;
+package jyoPlayerProgress;
 
 import java.util.ArrayList;
 
