@@ -55,8 +55,12 @@ public class SBuildState extends State{
 				myLocation = rc.getLocation();
 				alliedRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam());
 				enemyRobots = rc.senseNearbyGameObjects(Robot.class, 100000,rc.getTeam().opponent());
-				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class, 14,rc.getTeam().opponent());
+				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class,14,rc.getTeam().opponent());
 				encamp = rc.senseEncampmentSquares(rc.getLocation(), 100000, Team.NEUTRAL);
+				ArrayList<MapLocation> encamps = new ArrayList<MapLocation>();
+				for(MapLocation camp : encamp){
+					encamps.add(camp);
+				}
 /*				encamp = rc.senseAllEncampmentSquares();
 */				myEncamp = rc.senseAlliedEncampmentSquares();
 				closestEncamp = null;
@@ -146,14 +150,14 @@ public class SBuildState extends State{
 							}
 						}
 						if(closestRobot.distanceSquaredTo(mL) > myLocation.distanceSquaredTo(mL)){
-/*							this.rc.setIndicatorString(0, "I will take the encamptment. " + closestEncamps.toString());
-*/							goToLocation(mL, myLocation);
+							this.rc.setIndicatorString(0, "I will take the encampment. " + closestEncamps.toString() + ", " + encamps.toString());
+							goToLocation(mL, myLocation);
 							goingToEncamp = true;
 							break;
 						}
 						else
-/*							this.rc.setIndicatorString(0,"I am not the one. " + closestEncamps.toString());
-*/							continue;
+							this.rc.setIndicatorString(0, "I am not the closest. " + closestEncamps.toString() + ", " + encamps.toString());
+							continue;
 						}
 					if (!goingToEncamp){
 						if (goodPlace(myLocation)&&rc.senseMine(myLocation)==null && myLocation.distanceSquaredTo(rc.senseHQLocation())>4)
