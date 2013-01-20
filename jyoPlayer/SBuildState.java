@@ -26,6 +26,7 @@ public class SBuildState extends State{
 	public MapLocation closestEncamp3;
 	//public MapLocation[] closestEncamps;
 	public ArrayList<MapLocation> closestEncamps;
+	public int encampmentRadius;
 	
 	// constructor
 	public SBuildState(StateMachine rootSM){
@@ -56,7 +57,7 @@ public class SBuildState extends State{
 				alliedRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam());
 				enemyRobots = rc.senseNearbyGameObjects(Robot.class, 100000,rc.getTeam().opponent());
 				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class, 14,rc.getTeam().opponent());
-				encamp = rc.senseEncampmentSquares(rc.getLocation(), 100000, Team.NEUTRAL);
+				encamp = rc.senseEncampmentSquares(rc.getLocation(), 225, Team.NEUTRAL);
 /*				encamp = rc.senseAllEncampmentSquares();
 */				myEncamp = rc.senseAlliedEncampmentSquares();
 				closestEncamp = null;
