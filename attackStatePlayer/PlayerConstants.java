@@ -9,6 +9,8 @@ public class PlayerConstants {
 	public static final int NUM_ROBOTS_IN_ATTACK_GROUP = 30;
 	public static final int NUM_ROBOTS_FOR_RETREAT = 5;
 	
+	public static final int WITHIN_HQ_RESCUING_RANGE_SQUARED = 400;
+	
 	// FORMAT: 1yyy0xxx
 	public static final int HQ_CENTER_OF_MASS_CHANNEL = 1337;
 	public static final int HQ_UNDER_ATTACK_CHANNEL  = 1234;

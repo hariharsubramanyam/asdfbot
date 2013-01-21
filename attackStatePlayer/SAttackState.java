@@ -38,7 +38,7 @@ public class SAttackState extends State {
 				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class, PlayerConstants.NEARBY_ENEMY_DIST_SQUARED,rc.getTeam().opponent());
 				nearbyAlliedRobots = rc.senseNearbyGameObjects(Robot.class, PlayerConstants.NEARBY_ALLY_DIST_SQUARED,rc.getTeam());
 				myEncamp = rc.senseAlliedEncampmentSquares();
-				if(this.isHQUnderAttack()){
+				if(this.isHQUnderAttack() && rc.getLocation().distanceSquaredTo(alliedHQ) < PlayerConstants.WITHIN_HQ_RESCUING_RANGE_SQUARED){
 					this.goToLocation(alliedHQ);
 					return;
 				}
