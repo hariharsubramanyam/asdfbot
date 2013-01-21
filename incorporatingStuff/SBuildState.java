@@ -34,10 +34,7 @@ public class SBuildState extends State{
 	public MapLocation getTarget(){
 		try {
 			int msgInt = this.rc.readBroadcast(PlayerConstants.ENCAMPMENT_LOCATION_CHANNEL);
-			String msg = "" + msgInt;
-			MapLocation square = new MapLocation(Integer.parseInt(msg.substring(5)),Integer.parseInt(msg.substring(1,4)));
-			rc.setIndicatorString(0, square.toString());
-			return square;
+			return PlayerConstants.intToMapLocation(msgInt);
 		} catch (GameActionException e) {
 			e.printStackTrace();
 			return null;
@@ -50,37 +47,13 @@ public class SBuildState extends State{
 			return null;
 		}*/
 	}
-
-	public void sendEncampmentLocation(MapLocation loc){
-		int x = loc.x;
-		int y = loc.y;
-		String msg = "1";
-		if(y < 10)
-			msg += "00"+y;
-		else if(y < 100)
-			msg += "0"+y;
-		else
-			msg += y;
-		
-		msg += "0";
-		
-		if(x < 10)
-			msg += "00" + x;
-		else if(x < 100)
-			msg += "0" + x;
-		else
-			msg += x;
-/*		this.rc.setIndicatorString(0, msg);
-*/		try {
-			int channel = 2*loc.x+loc.y+PlayerConstants.BEING_TAKEN_CHANNEL;
-			this.rc.broadcast(channel, Integer.parseInt(msg));
-		} catch (GameActionException e) {e.printStackTrace();}
-	}
 	
 	// when we enter this state, we need to figure out where the rally point is
 	@Override
 	public void doEntryAct() {
 		target = getTarget();
+		if (target == null)
+			this.rootSM.goToState(SMConstants.SWAITSTATE);
 	}
 	// no exit work
 	@Override
@@ -100,7 +73,8 @@ public class SBuildState extends State{
 				enemyRobots = rc.senseNearbyGameObjects(Robot.class, 100000,rc.getTeam().opponent());
 				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class,14,rc.getTeam().opponent());
 				rc.setIndicatorString(0, "Build State. " + target.toString());
-				sendEncampmentLocation(target);
+				int channel = 13*target.x*target.x+5*target.y+3+PlayerConstants.BEING_TAKEN_CHANNEL;
+				this.rc.broadcast(channel, PlayerConstants.mapLocationToInt(target));
 			
 				if(nearbyEnemyRobots.length > 0){
 					int closestDistance = 10000000;

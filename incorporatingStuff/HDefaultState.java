@@ -5,15 +5,18 @@ import java.util.PriorityQueue;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
+import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;
 import battlecode.common.Robot;
 import battlecode.common.Clock;
+import battlecode.common.RobotInfo;
+import battlecode.common.RobotType;
 import battlecode.common.Team;
 import battlecode.engine.instrumenter.lang.System;
 
 public class HDefaultState extends State{
 
-/*	public Robot[] nearbyRobots;*/
+	public Robot[] nearbyRobots;
 	public MapLocation rallyPoint;
 	public MapLocation enemyHQ;
 	public MapLocation alliedHQ;
@@ -26,11 +29,18 @@ public class HDefaultState extends State{
 	public PriorityQueue<EncampmentSquare> openencamps;
 	public ArrayList<MapLocation> sortedEncamps;
 	public int numWaitBots = 0;
+	public double previousEnergon;
+	public boolean underAttack;
+	public int valOnArtilleryChannel;
 	
 	public HDefaultState(StateMachine rootSM){
 		this.stateID = SMConstants.SATTACKSTATE;
 		this.rootSM = rootSM;
 		this.rc = rootSM.getRC();
+	}
+	
+	public boolean isCorner(MapLocation loc){
+		return (loc.x == 0 || loc.y == 0);
 	}
 	
 	public class EncampmentSquare implements Comparable<EncampmentSquare>{
@@ -65,7 +75,8 @@ public class HDefaultState extends State{
 		PriorityQueue<EncampmentSquare> sortencamps = new PriorityQueue<EncampmentSquare>();
 		for(MapLocation mL : encamp){
 			EncampmentSquare currEncamp = new EncampmentSquare(mL.distanceSquaredTo(alliedHQ),mL.x,mL.y);
-			if(!isTaken(mL) && mL.distanceSquaredTo(alliedHQ) > 3){
+			boolean isCorner = isCorner(mL);
+			if(!isTaken(mL) && mL.distanceSquaredTo(alliedHQ) > 3 && mL.distanceSquaredTo(enemyHQ) >= mL.distanceSquaredTo(alliedHQ) && !isCorner){
 				sortencamps.add(currEncamp);
 			}
 		}
@@ -76,13 +87,10 @@ public class HDefaultState extends State{
 	public boolean isTaken(MapLocation encamp){
 		try {
 			int msgInt = 0;
-			int channel = 2*encamp.x+encamp.y+PlayerConstants.BEING_TAKEN_CHANNEL;
+			int channel = 13*encamp.x*encamp.x+5*encamp.y+3+PlayerConstants.BEING_TAKEN_CHANNEL;
 			msgInt = this.rc.readBroadcast(channel);
 			if(msgInt != 0){
-				String msg = "" + msgInt;
-/*				rc.setIndicatorString(0, msg);
-*/				MapLocation square = new MapLocation(Integer.parseInt(msg.substring(5)),Integer.parseInt(msg.substring(1,4)));
-				return square.equals(encamp);
+				return encamp.equals(PlayerConstants.intToMapLocation(msgInt));
 			}
 			else
 				return false;
@@ -98,55 +106,34 @@ public class HDefaultState extends State{
 			sortedEncamps.add(new MapLocation(e.r,e.c));
 		return sortedEncamps;
 	}
-
-	public void sendEncampmentLocation(MapLocation loc){
-		int x = loc.x;
-		int y = loc.y;
-		String msg = "1";
-		if(y < 10)
-			msg += "00"+y;
-		else if(y < 100)
-			msg += "0"+y;
+	
+	public void setUnderAttackMessage(boolean underAttack){
+		try{
+		if(underAttack)
+			this.rc.broadcast(PlayerConstants.HQ_UNDER_ATTACK_CHANNEL,1);
 		else
-			msg += y;
-		
-		msg += "0";
-		
-		if(x < 10)
-			msg += "00" + x;
-		else if(x < 100)
-			msg += "0" + x;
-		else
-			msg += x;
-/*		this.rc.setIndicatorString(0, msg.toString());
-*/		try {
-			this.rc.broadcast(PlayerConstants.ENCAMPMENT_LOCATION_CHANNEL, Integer.parseInt(msg));
-		} catch (GameActionException e) {e.printStackTrace();}
+			this.rc.broadcast(PlayerConstants.HQ_UNDER_ATTACK_CHANNEL, 0);
+		}catch(Exception ex){ex.printStackTrace();}
 	}
 	
-	public void sendCenterOfMassMessage(MapLocation loc){
-		int x = loc.x;
-		int y = loc.y;
-		String msg = "1";
-		if(y < 10)
-			msg += "00"+y;
-		else if(y < 100)
-			msg += "0"+y;
-		else
-			msg += y;
-		
-		msg += "0";
-		
-		if(x < 10)
-			msg += "00" + x;
-		else if(x < 100)
-			msg += "0" + x;
-		else
-			msg += x;
-/*		this.rc.setIndicatorString(0, msg);
-*/		try {
-			this.rc.broadcast(PlayerConstants.HQ_CENTER_OF_MASS_CHANNEL, Integer.parseInt(msg));
-		} catch (GameActionException e) {e.printStackTrace();}
+	public void sendEnemyArtilleryInRangeMessage(int loc){
+		try{this.rc.broadcast(PlayerConstants.ARTILLERY_IN_SIGHT_MESSAGE,loc);}catch(Exception ex){ex.printStackTrace();}
+	}
+	
+	public MapLocation enemyArtilleryInShootingRange(){
+		int rangeBuffer = 100; // sense out sqrt(rangeBuffer) squares beyond artillery range 
+		Robot[] robs = this.rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), RobotType.ARTILLERY.attackRadiusMaxSquared+rangeBuffer, rc.getTeam().opponent());
+		RobotInfo robInf;
+		for(Robot r : robs){
+			if(r == null)
+				continue;
+			try {
+				robInf = rc.senseRobotInfo(r);
+				if(robInf.type == RobotType.ARTILLERY)
+					return robInf.location;
+			} catch (GameActionException ex) {ex.printStackTrace();}
+		}
+		return null;
 	}
 	
 	@Override
@@ -181,13 +168,37 @@ public class HDefaultState extends State{
 //				this.rc.setIndicatorString(0, teamCM.toString());
 //				if(teamCM != null)
 //					this.sendCenterOfMassMessage(teamCM);
+				if(this.previousEnergon > this.rc.getEnergon() && !this.underAttack){
+					if(Clock.getRoundNum() < GameConstants.ROUND_MIN_LIMIT){
+						this.setUnderAttackMessage(true);
+						this.underAttack = true;
+					}
+				}
+				else if(this.previousEnergon == this.rc.getEnergon() && this.underAttack){
+					this.rc.setIndicatorString(0, "UNDER ATTACK!");
+					this.underAttack = false;
+					this.setUnderAttackMessage(false);
+				}
+				this.previousEnergon = this.rc.getEnergon();
+				
+				if(!this.underAttack){
+					MapLocation artilleryLoc = this.enemyArtilleryInShootingRange();
+					int convertedArtLoc = 0;
+					if(artilleryLoc != null)
+						convertedArtLoc = PlayerConstants.mapLocationToInt(artilleryLoc);
+					
+					if(this.valOnArtilleryChannel != convertedArtLoc){
+						this.valOnArtilleryChannel = convertedArtLoc;
+						this.sendEnemyArtilleryInRangeMessage(convertedArtLoc);
+					}
+				}
 				Direction dir = rc.getLocation().directionTo(rc.senseEnemyHQLocation());
 				int[] directionOffsets = {0,1,-1,2,-2,3,-3,4};
 				for(int d : directionOffsets){
 					Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
 					if (rc.canMove(lookingAtCurrently) && Clock.getRoundNum()>0){
 						rc.spawn(lookingAtCurrently);
-						if (numWaitBots >= 4){
+						if (numWaitBots >= 4 && sortedEncamps.size() > 0){
 							rc.broadcast(PlayerConstants.STATE_ASSIGNMENT_CHANNEL,1);
 							numWaitBots = 0;
 						}
@@ -198,8 +209,10 @@ public class HDefaultState extends State{
 						break;
 					}
 				}
-				rc.setIndicatorString(0, sortedEncamps.get(0).toString());
-				sendEncampmentLocation(sortedEncamps.get(0));
+				if(sortedEncamps.size() > 0){
+					rc.setIndicatorString(0, sortedEncamps.get(0).toString());
+					this.rc.broadcast(PlayerConstants.ENCAMPMENT_LOCATION_CHANNEL, PlayerConstants.mapLocationToInt(sortedEncamps.get(0)));
+				}
 			}
 		}catch(Exception ex){ex.printStackTrace();}
 	}

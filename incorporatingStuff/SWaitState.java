@@ -60,6 +60,9 @@ public class SWaitState extends State{
 					goToLocation(closestEnemy, myLocation);
 				}
 				
+				else if(myLocation.distanceSquaredTo(alliedHQ) > 192)
+					this.rootSM.goToState(SMConstants.SATTACKSTATE);
+				
 				else{
 					if (goodPlace(myLocation, alliedHQ, encamp)&&rc.senseMine(myLocation)==null && myLocation.distanceSquaredTo(rc.senseHQLocation())>4)
 						rc.layMine();
@@ -107,7 +110,7 @@ public class SWaitState extends State{
 				break;
 			}
 		}
-		return (d2>4/* && d2<=64*/ && !isEncamp);
+		return (d2>4 && d2<192 && !isEncamp);
 	}
 	
 	//Movement system
@@ -117,9 +120,9 @@ public class SWaitState extends State{
 		int targetWeighting = targetWeight(myLocation.distanceSquaredTo(alliedHQ), enemyHQ, alliedHQ);
 		MapLocation goalLoc = myLocation.add(toTarget,targetWeighting);//toward target, TODO weighted by the distance?
 		
-		goalLoc = goalLoc.add(myLocation.directionTo(enemyHQ),3);
-		MapLocation closestAlly = findClosest(allies);
-		goalLoc = goalLoc.add(myLocation.directionTo(closestAlly), -5);
+/*		goalLoc = goalLoc.add(myLocation.directionTo(enemyHQ),3);
+*/		MapLocation closestAlly = findClosest(allies);
+		goalLoc = goalLoc.add(myLocation.directionTo(closestAlly), -8);
 		//TODO repel from allied mines?
 		//now use that direction
 		Direction finalDir = myLocation.directionTo(goalLoc);
@@ -129,8 +132,9 @@ public class SWaitState extends State{
 	}
 	
 	private static int targetWeight(int dSquared, MapLocation enemyHQ, MapLocation alliedHQ){
-		int HQseparation = enemyHQ.distanceSquaredTo(alliedHQ);
-		if (dSquared>100){
+		return 5;
+/*		int HQseparation = enemyHQ.distanceSquaredTo(alliedHQ);*/
+/*		if (dSquared>100){
 			if(Clock.getRoundNum()<1000){
 				if (HQseparation>900)
 					return 5;
@@ -154,7 +158,7 @@ public class SWaitState extends State{
 				return 6;
 		}else{
 			return 1;
-		}
+		}*/
 	}
 
 	private MapLocation findClosest(Robot[] enemyRobots) throws GameActionException {

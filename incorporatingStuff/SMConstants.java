@@ -35,7 +35,7 @@ public class SMConstants {
 	public static int[] getTransitionsForState(int stateID){
 		switch(stateID){
 		case SATTACKSTATE: return new int[]{};
-		case SBUILDSTATE: return new int[]{SNUKETRANSITION,SROUND200TRANSITION};
+		case SBUILDSTATE: return new int[]{SNUKETRANSITION};
 		case SWAITSTATE: return new int[]{SNUKETRANSITION,SROUND200TRANSITION};
 		case HDEFAULTSTATE: return new int[]{};
 		default: return null;
