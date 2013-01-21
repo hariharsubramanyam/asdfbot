@@ -38,9 +38,20 @@ public class SAttackState extends State {
 				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class, PlayerConstants.NEARBY_ENEMY_DIST_SQUARED,rc.getTeam().opponent());
 				nearbyAlliedRobots = rc.senseNearbyGameObjects(Robot.class, PlayerConstants.NEARBY_ALLY_DIST_SQUARED,rc.getTeam());
 				myEncamp = rc.senseAlliedEncampmentSquares();
+				if(this.isHQUnderAttack()){
+					this.goToLocation(alliedHQ);
+					return;
+				}
 				
-				if(!inGroup){
+				int artilleryInRangeMsg = this.getHQArtilleryMessage();
+				if(artilleryInRangeMsg != 0){
+					this.goToLocation(PlayerConstants.intToMapLocation(artilleryInRangeMsg));
+					return;
+				}
+				
+				if(!inGroup && nearbyAlliedRobots.length < PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP){
 					this.goToLocation(this.traditionalRallyPoint);
+					return;
 				}
 				if(!inGroup && nearbyAlliedRobots.length > PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP){
 					inGroup = true;
@@ -55,13 +66,27 @@ public class SAttackState extends State {
 						this.goToLocation(enemyHQ);
 						this.rc.setIndicatorString(1,"Going to enemyHQ " + enemyHQ.toString());
 					}
+					return;
 				}
 			}
 		}catch(Exception e){e.printStackTrace();}
 	}
+	
+	private boolean isHQUnderAttack(){
+		try{
+			return this.rc.readBroadcast(PlayerConstants.HQ_UNDER_ATTACK_CHANNEL) == 1;
+		}catch(Exception ex){ex.printStackTrace();return false; }
+	}
 
 	//Movement system
 
+	private int getHQArtilleryMessage(){
+		try{
+			return this.rc.readBroadcast(PlayerConstants.ARTILLERY_IN_SIGHT_MESSAGE);
+		}
+		catch(Exception ex){ ex.printStackTrace(); return 0;}
+	}
+	
 	private void goToLocation(MapLocation place)
 			throws GameActionException {
 		int dist = rc.getLocation().distanceSquaredTo(place);
@@ -69,11 +94,12 @@ public class SAttackState extends State {
 			int[] directionOffsets = {0,1,-1,2,-2};
 			Direction dir = rc.getLocation().directionTo(place);
 			Direction firstMine = null;
+			MapLocation hqloc = rc.senseHQLocation();
 			boolean hasMoved = false;
 			for (int d: directionOffsets){
 				Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
 				Team teamOfMine = rc.senseMine(rc.getLocation().add(lookingAtCurrently));
-				if(rc.canMove(lookingAtCurrently)){
+				if(rc.canMove(lookingAtCurrently) && !rc.getLocation().add(lookingAtCurrently).isAdjacentTo(hqloc)){
 					if(teamOfMine == null || teamOfMine == this.rc.getTeam()){
 						if (this.movedFrom != lookingAtCurrently.opposite()){
 							this.movedFrom = lookingAtCurrently;

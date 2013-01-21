@@ -56,6 +56,7 @@ public class SBuildState extends State{
 						if(this.goalEncampment == null || this.goalEncampment.equals(rc.senseHQLocation().add(Direction.SOUTH))){
 							this.goalEncampment = null;
 							this.findingEncampment = false;
+							return;
 						}
 					}
 					if(this.rc.getLocation().equals(this.goalEncampment)){
