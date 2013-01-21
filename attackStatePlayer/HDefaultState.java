@@ -2,6 +2,7 @@ package attackStatePlayer;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
+import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;
 import battlecode.common.Robot;
 import battlecode.common.Clock;
@@ -69,8 +70,10 @@ public class HDefaultState extends State{
 //				if(teamCM != null)
 //					this.sendCenterOfMassMessage(teamCM);
 				if(this.previousEnergon > this.rc.getEnergon() && !this.underAttack){
-					this.setUnderAttackMessage(true);
-					this.underAttack = true;
+					if(Clock.getRoundNum() < GameConstants.ROUND_MIN_LIMIT){
+						this.setUnderAttackMessage(true);
+						this.underAttack = true;
+					}
 				}
 				else if(this.previousEnergon == this.rc.getEnergon() && this.underAttack){
 					this.rc.setIndicatorString(0, "UNDER ATTACK!");
