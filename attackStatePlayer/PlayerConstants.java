@@ -39,7 +39,7 @@ public class PlayerConstants {
 	}
 
 	public static MapLocation intToMapLocation(int loc){
-		return new MapLocation(Integer.parseInt((""+loc).substring(1, 4)),Integer.parseInt((""+loc).substring(5)));
+		return new MapLocation(Integer.parseInt((""+loc).substring(5)),Integer.parseInt((""+loc).substring(1,4)));
 	}
 
 	
