@@ -22,6 +22,7 @@ public class SBuildState extends State{
 	//public MapLocation[] closestEncamps;
 	public ArrayList<MapLocation> closestEncamps;
 	public MapLocation target;
+	public int encampType;
 
 	// constructor
 	public SBuildState(StateMachine rootSM){
@@ -50,7 +51,16 @@ public class SBuildState extends State{
 	// when we enter this state, we need to figure out where the rally point is
 	@Override
 	public void doEntryAct() {
-		target = getTarget();
+		try {
+			if (rc.readBroadcast(PlayerConstants.ENCAMPMENT_LOCATION_CHANNEL) > 999999){
+				String broadcast = rc.readBroadcast(PlayerConstants.ENCAMPMENT_LOCATION_CHANNEL)+"";
+				target = new MapLocation(Integer.parseInt(broadcast.substring(4, 7)),Integer.parseInt(broadcast.substring(1, 4)));
+				encampType = Integer.parseInt(broadcast.substring(0,1));
+			}
+		} catch (GameActionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		if (target == null)
 			this.rootSM.goToState(SMConstants.SWAITSTATE);
 	}
@@ -73,7 +83,7 @@ public class SBuildState extends State{
 				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class,14,rc.getTeam().opponent());
 				rc.setIndicatorString(0, "Build State. " + target.toString());
 				int channel = 13*target.x*target.x+5*target.y+3+PlayerConstants.BEING_TAKEN_CHANNEL;
-				this.rc.broadcast(channel, PlayerConstants.mapLocationToInt(target));
+				this.rc.broadcast(channel, 19541235);
 
 				if(nearbyEnemyRobots.length > 0){
 					int closestDistance = 10000000;
@@ -91,7 +101,14 @@ public class SBuildState extends State{
 				}
 
 				else if(target.equals(myLocation)){
-					rc.captureEncampment(RobotType.ARTILLERY);
+					if(encampType == 2)
+						rc.captureEncampment(RobotType.ARTILLERY);
+					else if(encampType == 3)
+						rc.captureEncampment(RobotType.GENERATOR);
+					else if(encampType == 4)
+						rc.captureEncampment(RobotType.SUPPLIER);
+					else if(encampType == 9)
+						rc.captureEncampment(RobotType.GENERATOR);
 				}
 
 				else{

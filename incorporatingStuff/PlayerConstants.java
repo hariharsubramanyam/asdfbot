@@ -1,5 +1,6 @@
 package incorporatingStuff;
 
+import hqEncampmentFinder.EncampmentLoc;
 import battlecode.common.MapLocation;
 
 public class PlayerConstants {
@@ -41,6 +42,13 @@ public class PlayerConstants {
 		else
 			msg += x;
 		return Integer.parseInt(msg);
+	}
+	
+	public static int encampmentSquareToInt(EncampmentSquare next){
+		int message = 0;
+		message = (next.location.x + next.location.y*1000);
+		message += next.type*1000000;
+		return message;
 	}
 	
 	public static MapLocation intToMapLocation(int loc){
