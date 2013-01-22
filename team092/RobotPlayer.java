@@ -12,10 +12,12 @@ public class RobotPlayer {
 	
 	public static void run(RobotController rc) throws GameActionException{		
 		
-		// Determine the type of robot and assign the proper state machine
+		// Determine the type of robot and assign the proper state machine		
 		try{
 			if(rc.getType()==RobotType.SOLDIER)
 				sm = new SoldierSM(rc);
+			else if(rc.getType() == RobotType.HQ)
+				sm = new HQSM(rc);
 		}catch(Exception ex){ex.printStackTrace();}
 		
 		
@@ -24,13 +26,18 @@ public class RobotPlayer {
 			try{
 				// for now, hard code the HQ behavior 
 				if(sm==null){
-					if (rc.getType()==RobotType.HQ && rc.isActive()) {
+/*					if (rc.getType()==RobotType.HQ && rc.isActive()) {
 						Direction dir = rc.getLocation().directionTo(rc.senseEnemyHQLocation());
-						if (rc.canMove(dir)){
-							rc.spawn(dir);
+						int[] directionOffsets = {0,1,-1,2,-2,3,-3,4};
+						for(int d : directionOffsets){
+							Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
+							if (rc.canMove(lookingAtCurrently)){
+								rc.spawn(lookingAtCurrently);
+								break;
+							}
 						}
-					}
-					else if(rc.getType()==RobotType.ARTILLERY && rc.isActive()){
+					}*/
+					if(rc.getType()==RobotType.ARTILLERY && rc.isActive()){
 						Robot[] enemyRobots = rc.senseNearbyGameObjects(Robot.class,63,rc.getTeam().opponent());
 						// find the closest enemy
 						if(enemyRobots.length > 0){

@@ -1,16 +1,14 @@
 package team092;
 
-import battlecode.common.*;
+import battlecode.common.GameActionException;
 
-public class SAttackTransition extends Transition {
+public class SNukeTransition extends Transition {
 	
-	public SAttackTransition(StateMachine rootSM){
+	public SNukeTransition(StateMachine rootSM){
 		this.rootSM = rootSM;
 		this.sourceStates = new int[] {SMConstants.SWAITSTATE, SMConstants.SBUILDSTATE};
-		this.targetState = SMConstants.SATTACKSTATE;
+		this.targetState = SMConstants.SRALLYSTATE;
 	}
-	
-	
 
 	@Override
 	public int[] getSourceStateID() {
@@ -25,7 +23,9 @@ public class SAttackTransition extends Transition {
 
 	@Override
 	public boolean isTriggered() {
-		return (Clock.getRoundNum() > 200);
+		try {
+			return rootSM.rc.senseEnemyNukeHalfDone();
+		} catch (GameActionException e) {return false;}
 	}
 
 }

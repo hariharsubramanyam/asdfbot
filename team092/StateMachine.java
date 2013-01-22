@@ -14,12 +14,19 @@ public abstract class StateMachine {
 	
 	public void step(){
 		// see if we have to leave this current state
-		for(Transition t : this.currentTransitions)
-			if(t.isTriggered()){
+		for(Transition t : this.currentTransitions){
+			boolean isSource = false;
+			for(int i : t.sourceStates)
+				if(i == currentState.stateID){
+					isSource = true;
+					break;
+				}
+			if(t.isTriggered() && isSource){
 				currentState.doExitAct();	// if we must leave, finish up any work in this state
 				this.goToState(t.targetState);	// and go to the next one
 				break;
 			}
+		}
 		currentState.doAction();			// finally, perform the behavior described by this state
 	}
 	

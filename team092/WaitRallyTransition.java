@@ -1,10 +1,8 @@
 package team092;
 
-import battlecode.common.Clock;
+public class WaitRallyTransition extends Transition {
 
-public class SRound200Transition extends Transition {
-
-	public SRound200Transition(StateMachine rootSM){
+	public WaitRallyTransition(StateMachine rootSM){
 		this.rootSM = rootSM;
 		this.sourceStates = new int[] {SMConstants.SWAITSTATE};
 		this.targetState = SMConstants.SRALLYSTATE;
@@ -25,7 +23,7 @@ public class SRound200Transition extends Transition {
 
 	@Override
 	public boolean isTriggered() {
-		return (Clock.getRoundNum()%200 == 0);
+		return (this.rootSM.rc.getLocation().distanceSquaredTo(this.rootSM.rc.senseHQLocation()) > 192);
 	}
 
 }
