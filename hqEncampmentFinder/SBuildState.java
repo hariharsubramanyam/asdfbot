@@ -12,7 +12,6 @@ import battlecode.common.*;
 public class SBuildState extends State{
 	
 	private int encampChannel = 2345;
-	private int encampChannel2 = 1234;
 	private MapLocation encampTarget;
 	private int encampType;
 	
@@ -46,12 +45,6 @@ public class SBuildState extends State{
 				encampType = Integer.parseInt(broadcast.substring(0,1));
 				rc.broadcast(encampChannel, 0);
 			}
-			else if (rc.readBroadcast(encampChannel2) > 999999){
-				String broadcast = rc.readBroadcast(encampChannel2)+"";
-				encampTarget = new MapLocation(Integer.parseInt(broadcast.substring(4, 7)),Integer.parseInt(broadcast.substring(1, 4)));
-				encampType = Integer.parseInt(broadcast.substring(0,1));
-				rc.broadcast(encampChannel2, 0);
-			}
 		} catch (GameActionException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -76,14 +69,14 @@ public class SBuildState extends State{
 				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class,14,rc.getTeam().opponent());
 				
 				if(myLocation.equals(encampTarget)){
-					if(encampType == 1)
+					if(encampType == 2)
 						rc.captureEncampment(RobotType.ARTILLERY);
-					else if(encampType == 2)
-						rc.captureEncampment(RobotType.GENERATOR);
 					else if(encampType == 3)
-						rc.captureEncampment(RobotType.SUPPLIER);
+						rc.captureEncampment(RobotType.GENERATOR);
 					else if(encampType == 4)
-						rc.captureEncampment(RobotType.SHIELDS);
+						rc.captureEncampment(RobotType.SUPPLIER);
+					else if(encampType == 9)
+						rc.captureEncampment(RobotType.GENERATOR);
 				}
 				else if(nearbyEnemyRobots.length > 0){
 					int closestDistance = 10000000;

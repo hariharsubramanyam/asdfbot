@@ -25,7 +25,7 @@ public class SRound200Transition extends Transition {
 
 	@Override
 	public boolean isTriggered() {
-		return false;//(Clock.getRoundNum() > 200);
+		return (Clock.getRoundNum() > 200);
 	}
 
 }

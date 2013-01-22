@@ -16,15 +16,14 @@ public class HDefaultState extends State{
 	public MapLocation myLocation;
 	public Robot[] nearbyRobots;
 	private int lastBroadcast;
-	private int lastBroadcast2;
 	private int encampChannel = 2345;
-	private int encampChannel2 = 1234;
 	public HDefaultState(StateMachine rootSM){
 		this.stateID = SMConstants.SATTACKSTATE;
 		this.rootSM = rootSM;
 		this.rc = rootSM.getRC();
 		this.myLocation = rc.getLocation();
 		setEncampmentsToCapture();
+		lastBroadcast = 9999999;
 		
 		
 	}
@@ -71,10 +70,6 @@ public class HDefaultState extends State{
 					lastBroadcast = createNextBroadcast();
 					rc.broadcast(encampChannel, lastBroadcast);
 				}
-				if(rc.readBroadcast(encampChannel2) != lastBroadcast2){
-					lastBroadcast2 = createNextBroadcast();
-					rc.broadcast(encampChannel2, lastBroadcast2);
-				}
 //				MapLocation teamCM = this.getTeamCenterOfMass();
 //				this.rc.setIndicatorString(0, teamCM.toString());
 //				if(teamCM != null)
@@ -117,16 +112,35 @@ public class HDefaultState extends State{
 	public void setEncampmentsToCapture(){
 		encampmentsToCapture = new ArrayList<EncampmentLoc>();
 		try{
-			int hqDis = myLocation.distanceSquaredTo(rc.senseEnemyHQLocation());
-			MapLocation[] encamps = rc.senseEncampmentSquares(myLocation, 1000000000/*Math.round(hqDis/(float)2.25)*/, Team.NEUTRAL);
+			MapLocation enemyHQ = rc.senseEnemyHQLocation();
+			double hqDis = Math.sqrt(myLocation.distanceSquaredTo(enemyHQ));
+			MapLocation[] encamps = rc.senseEncampmentSquares(myLocation, (int)Math.pow((Math.round((float)hqDis/2)),2), Team.NEUTRAL);
 			for(MapLocation e : encamps){
-				encampmentsToCapture.add(new EncampmentLoc(e, e.distanceSquaredTo(myLocation)));
+				if (e.distanceSquaredTo(myLocation)>4){
+					encampmentsToCapture.add(new EncampmentLoc(e, e.distanceSquaredTo(myLocation)));
+				}
 			}
 			Collections.sort(encampmentsToCapture);
-			lastBroadcast = createNextBroadcast();
-			rc.broadcast(encampChannel, lastBroadcast);
-			lastBroadcast2 = createNextBroadcast();
-			rc.broadcast(encampChannel2, lastBroadcast2);
+			int artCount = 0;
+			int encCount = 0;
+			int maxArts = Math.min(6, Math.round((float)encampmentsToCapture.size()/5));
+			for (EncampmentLoc e: encampmentsToCapture){
+				int locVsEnemyHQ = e.location.distanceSquaredTo(enemyHQ);
+				if(e.distanceFromHQ<100 && artCount<maxArts && locVsEnemyHQ<(Math.pow((hqDis),2)+8)){
+					artCount++;
+					encCount++;
+					e.setType(2);
+				}
+				else{
+					if(encCount%2 == 0){
+						e.setType(3);
+					}
+					else{
+						e.setType(4);
+					}
+					encCount++;
+				}
+			}
 		
 		} catch (GameActionException e) {
 			// TODO Auto-generated catch block
@@ -140,9 +154,9 @@ public class HDefaultState extends State{
 		}
 		else{
 			int message = 0;
-			MapLocation next = encampmentsToCapture.remove(0).location;
-			message = (next.x + next.y*1000);
-			message += 2000000;
+			EncampmentLoc next = encampmentsToCapture.remove(0);
+			message = (next.location.x + next.location.y*1000);
+			message += next.type*1000000;
 			return message;
 		}
 	}
