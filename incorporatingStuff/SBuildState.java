@@ -2,7 +2,7 @@
  * State for soldier state machine
  * Behavior - go to closest enemy or rally point
  */
-package jyoPlayer;
+package incorporatingStuff;
 
 
 import java.util.ArrayList;
@@ -19,14 +19,10 @@ public class SBuildState extends State{
 	public Robot[] alliedRobots;
 	public Robot[] enemyRobots;
 	public Robot[] nearbyEnemyRobots;
-	public MapLocation[] encamp;
-	public MapLocation[] myEncamp;
-	public MapLocation closestEncamp;
-	public MapLocation closestEncamp2;
-	public MapLocation closestEncamp3;
+
 	//public MapLocation[] closestEncamps;
 	public ArrayList<MapLocation> closestEncamps;
-	public int encampmentRadius;
+	public MapLocation target;
 	
 	// constructor
 	public SBuildState(StateMachine rootSM){
@@ -34,11 +30,30 @@ public class SBuildState extends State{
 		this.rootSM = rootSM;
 		this.rc = rootSM.getRC();
 	}
-
+	
+	public MapLocation getTarget(){
+		try {
+			int msgInt = this.rc.readBroadcast(PlayerConstants.ENCAMPMENT_LOCATION_CHANNEL);
+			return PlayerConstants.intToMapLocation(msgInt);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+			return null;
+		}
+/*		try {
+			String msg = "" + this.rc.readBroadcast(PlayerConstants.ENCAMPMENT_LOCATION_CHANNEL);
+			return new MapLocation(Integer.parseInt(msg.substring(1, 4)),Integer.parseInt(msg.substring(5)));
+		} catch (GameActionException e) {
+			e.printStackTrace();
+			return null;
+		}*/
+	}
+	
 	// when we enter this state, we need to figure out where the rally point is
 	@Override
 	public void doEntryAct() {
-		rallyPoint = findRallyPoint();
+		target = getTarget();
+		if (target == null)
+			this.rootSM.goToState(SMConstants.SWAITSTATE);
 	}
 	// no exit work
 	@Override
@@ -49,76 +64,18 @@ public class SBuildState extends State{
 	public void doAction() {
 		try{
 			if(rc.isActive()){
-				if(enemyHQ == null)
+/*				if(enemyHQ == null)
 					enemyHQ = rc.senseEnemyHQLocation();
 				if(alliedHQ == null)
-					alliedHQ = rc.senseHQLocation();
+					alliedHQ = rc.senseHQLocation();*/
 				myLocation = rc.getLocation();
 				alliedRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam());
 				enemyRobots = rc.senseNearbyGameObjects(Robot.class, 100000,rc.getTeam().opponent());
-				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class, 14,rc.getTeam().opponent());
-				encamp = rc.senseEncampmentSquares(rc.getLocation(), 225, Team.NEUTRAL);
 				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class,14,rc.getTeam().opponent());
-				encamp = rc.senseEncampmentSquares(rc.getLocation(), 100000, Team.NEUTRAL);
-				ArrayList<MapLocation> encamps = new ArrayList<MapLocation>();
-				for(MapLocation camp : encamp){
-					encamps.add(camp);
-				}
-/*				encamp = rc.senseAllEncampmentSquares();
-*/				myEncamp = rc.senseAlliedEncampmentSquares();
-				closestEncamp = null;
-				closestEncamp2 = null;
-				closestEncamp3 = null;
-				closestEncamps = new ArrayList<MapLocation>();
-				closestEncamps.clear();
-				
-
-				for (MapLocation mL : encamp){
-					int closestEncampDis = 100000;
-					int closestEncampDis2 = 100000;
-					int closestEncampDis3 = 100000;
-					if(mL.equals(myLocation) && mL.distanceSquaredTo(alliedHQ)>4){
-						rc.captureEncampment(RobotType.SUPPLIER);
-						rallyPoint = new MapLocation((3*myLocation.x+rc.senseEnemyHQLocation().x)/4,(3*myLocation.y*rc.senseEnemyHQLocation().y)/4);
-						break;
-					}
-					else{
-						if(mL.distanceSquaredTo(myLocation) <= closestEncampDis && mL.distanceSquaredTo(alliedHQ)>4){
-							closestEncampDis3 = closestEncampDis2;
-							closestEncampDis2 = closestEncampDis;
-							closestEncampDis = mL.distanceSquaredTo(myLocation);
-							closestEncamp3 = closestEncamp2;
-							closestEncamp2 = closestEncamp;
-							closestEncamp = mL;
-						}
-						else if(mL.distanceSquaredTo(myLocation) <= closestEncampDis2 && mL.distanceSquaredTo(alliedHQ)>4){
-							closestEncampDis3 = closestEncampDis2;
-							closestEncampDis2 = mL.distanceSquaredTo(myLocation);
-							closestEncamp3 = closestEncamp2;
-							closestEncamp2 = mL;
-						}
-						else if(mL.distanceSquaredTo(myLocation) <= closestEncampDis3 && mL.distanceSquaredTo(alliedHQ)>4){
-							closestEncampDis3 = mL.distanceSquaredTo(myLocation);
-							closestEncamp3 = mL;
-						}
-					}
-				}
-				if(closestEncamp != null)
-					closestEncamps.add(closestEncamp);
-				if(closestEncamp2 != null)
-					closestEncamps.add(closestEncamp2);
-				if(closestEncamp3 != null)
-					closestEncamps.add(closestEncamp3);
-/*				this.rc.setIndicatorString(0, closestEncamps.toString());*/
-/*				if(closestEncamp == null)
-					this.rc.setIndicatorString(0, "Was null");
-				else if(closestEncamp != null)
-					this.rc.setIndicatorString(0, closestEncamp.toString());
-				else if(closestEncamp2 != null)
-					this.rc.setIndicatorString(0, closestEncamp2.toString());
-				else if(closestEncamp3 != null)
-					this.rc.setIndicatorString(0, closestEncamp3.toString());*/
-
+				rc.setIndicatorString(0, "Build State. " + target.toString());
+				int channel = 13*target.x*target.x+5*target.y+3+PlayerConstants.BEING_TAKEN_CHANNEL;
+				this.rc.broadcast(channel, PlayerConstants.mapLocationToInt(target));
+			
 				if(nearbyEnemyRobots.length > 0){
 					int closestDistance = 10000000;
 					MapLocation closestEnemy = null;
@@ -132,43 +89,14 @@ public class SBuildState extends State{
 						}
 					}
 					goToLocation(closestEnemy, myLocation);
-
-
 				}
-/*				else if (encamp.length > 0 && myEncamp.length < 3){
-					if(closestEncamp !=null)
-						goToLocation(closestEncamp,myLocation);
-						freeGo(closestEncamp, alliedRobots, enemyRobots, nearbyEnemyRobots, myLocation, enemyHQ, alliedHQ);
-				}*/
+				
+				else if(target.equals(myLocation)){
+					rc.captureEncampment(RobotType.ARTILLERY);
+				}
+
 				else{
-					boolean goingToEncamp = false;
-					for (MapLocation mL : closestEncamps){
-						MapLocation closestRobot = null;
-						for (Robot r : alliedRobots){
-							int closest = 10000000;
-							RobotInfo aRobotInfo = rc.senseRobotInfo(r);
-							int dist = aRobotInfo.location.distanceSquaredTo(mL);
-							if(dist < closest){
-								closest = dist;
-								closestRobot = aRobotInfo.location;
-							}
-						}
-						if(closestRobot.distanceSquaredTo(mL) > myLocation.distanceSquaredTo(mL)){
-							this.rc.setIndicatorString(0, "I will take the encampment. " + closestEncamps.toString() + ", " + encamps.toString());
-							goToLocation(mL, myLocation);
-							goingToEncamp = true;
-							break;
-						}
-						else
-							this.rc.setIndicatorString(0, "I am not the closest. " + closestEncamps.toString() + ", " + encamps.toString());
-							continue;
-						}
-					if (!goingToEncamp){
-						if (goodPlace(myLocation)&&rc.senseMine(myLocation)==null && myLocation.distanceSquaredTo(rc.senseHQLocation())>4)
-							rc.layMine();
-						else
-							freeGo(rallyPoint, alliedRobots, enemyRobots, nearbyEnemyRobots, myLocation, enemyHQ, alliedHQ);
-					}
+					goToLocation(target,myLocation);
 				}
 			}
 		}catch(Exception e){

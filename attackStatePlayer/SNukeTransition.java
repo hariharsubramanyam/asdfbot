@@ -1,16 +1,14 @@
-package jyoPlayer;
+package attackStatePlayer;
 
-import battlecode.common.Clock;
+import battlecode.common.GameActionException;
 
-public class SRound200Transition extends Transition {
-
-	public SRound200Transition(StateMachine rootSM){
+public class SNukeTransition extends Transition {
+	
+	public SNukeTransition(StateMachine rootSM){
 		this.rootSM = rootSM;
-		this.sourceState = SMConstants.SBUILDSTATE;
+		this.sourceState = SMConstants.SWAITSTATE;
 		this.targetState = SMConstants.SATTACKSTATE;
 	}
-
-
 
 	@Override
 	public int getSourceStateID() {
@@ -25,7 +23,9 @@ public class SRound200Transition extends Transition {
 
 	@Override
 	public boolean isTriggered() {
-		return (Clock.getRoundNum() % 200==0);
+		try {
+			return rootSM.rc.senseEnemyNukeHalfDone();
+		} catch (GameActionException e) {return false;}
 	}
 
 }

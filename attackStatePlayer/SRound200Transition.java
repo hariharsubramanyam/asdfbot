@@ -1,4 +1,4 @@
-package jyoPlayer;
+package attackStatePlayer;
 
 import battlecode.common.Clock;
 

@@ -9,5 +9,7 @@ public class PlayerConstants {
 	
 	// FORMAT: 1yyy0xxx
 	public static final int HQ_CENTER_OF_MASS_CHANNEL = 1337;
+	public static final int ENCAMPMENT_LOCATION_CHANNEL = 1967;
+	public static final int BEING_TAKEN_CHANNEL = 932;
 
 }
