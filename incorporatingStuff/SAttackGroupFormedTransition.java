@@ -9,7 +9,7 @@ public class SAttackGroupFormedTransition extends Transition{
 	
 	public SAttackGroupFormedTransition(StateMachine rootSM){
 		this.rootSM = rootSM;
-		this.sourceStates = new int[] {SMConstants.SWAITSTATE};
+		this.sourceStates = new int[] {SMConstants.SRALLYSTATE};
 		this.targetState = SMConstants.SATTACKSTATE;
 	}
 	
@@ -26,14 +26,17 @@ public class SAttackGroupFormedTransition extends Transition{
 
 	@Override
 	public boolean isTriggered() {
-		Robot[] nearbyAllies = this.rootSM.rc.senseNearbyGameObjects(Robot.class, this.rootSM.rc.senseHQLocation(), this.ALLIED_HQ_RADIUS_SQUARED, this.rootSM.rc.getTeam());
+		Robot[] nearbyAlliedRobots;
+		nearbyAlliedRobots = this.rootSM.rc.senseNearbyGameObjects(Robot.class, PlayerConstants.NEARBY_ALLY_DIST_SQUARED,this.rootSM.rc.getTeam());
+		return (nearbyAlliedRobots.length >= this.SOLDIERS_FOR_ATTACK_GROUP);
+/*		Robot[] nearbyAllies = this.rootSM.rc.senseNearbyGameObjects(Robot.class, this.rootSM.rc.getLocation(), this.ALLIED_HQ_RADIUS_SQUARED, this.rootSM.rc.getTeam());
 		int numSoldiers = 0;
 		for(Robot r : nearbyAllies)
 			try{
 				if(r != null && this.rootSM.rc.senseRobotInfo(r).type == RobotType.SOLDIER)
 					numSoldiers++;
 			}catch(Exception ex){ex.printStackTrace();}
-		return (numSoldiers >= this.SOLDIERS_FOR_ATTACK_GROUP);
+		return (numSoldiers >= this.SOLDIERS_FOR_ATTACK_GROUP)*/
 	}
 
 }

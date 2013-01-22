@@ -4,8 +4,8 @@ import battlecode.common.MapLocation;
 
 public class PlayerConstants {
 	public static final int NEARBY_ENCAMPMENT_DIST_SQUARED = 10;
-	public static final int NEARBY_ALLY_DIST_SQUARED = 25;
-	public static final int NEARBY_ENEMY_DIST_SQUARED = 25;
+	public static final int NEARBY_ALLY_DIST_SQUARED = 36;
+	public static final int NEARBY_ENEMY_DIST_SQUARED = 36;
 	public static final int NUM_ROBOTS_IN_ATTACK_GROUP = 20;
 	public static final int NUM_ROBOTS_FOR_RETREAT = 5;
 	
@@ -16,8 +16,8 @@ public class PlayerConstants {
 	public static final int ENCAMPMENT_LOCATION_CHANNEL = 6848;
 	public static final int BEING_TAKEN_CHANNEL = 7000;
 	public static final int STATE_ASSIGNMENT_CHANNEL = 932;
-	public static final int HQ_UNDER_ATTACK_CHANNEL  = 1234;
-	public static final int ARTILLERY_IN_SIGHT_MESSAGE = 2334;
+	public static final int HQ_UNDER_ATTACK_CHANNEL  = 6842;
+	public static final int ARTILLERY_IN_SIGHT_MESSAGE = 6853;
 	
 	public static int mapLocationToInt(MapLocation loc){
 		// FORMAT 1yyy0xxx

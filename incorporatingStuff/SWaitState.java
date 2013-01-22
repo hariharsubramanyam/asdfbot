@@ -27,9 +27,7 @@ public class SWaitState extends State{
 
 	// when we enter this state, we need to figure out where the rally point is
 	@Override
-	public void doEntryAct() {
-		rallyPoint = findRallyPoint();
-	}
+	public void doEntryAct() {}
 
 	// no exit work
 	@Override
@@ -57,11 +55,9 @@ public class SWaitState extends State{
 
 				if(enemyRobots.length > 0){
 					MapLocation closestEnemy = findClosest(enemyRobots);
-					goToLocation(closestEnemy, myLocation);
+					MapLocation closestAlly = findClosest(alliedRobots);
+					surround(closestEnemy, closestAlly, myLocation);
 				}
-				
-				else if(myLocation.distanceSquaredTo(alliedHQ) > 192)
-					this.rootSM.goToState(SMConstants.SATTACKSTATE);
 				
 				else{
 					if (goodPlace(myLocation, alliedHQ, encamp)&&rc.senseMine(myLocation)==null && myLocation.distanceSquaredTo(rc.senseHQLocation())>4)
@@ -77,27 +73,25 @@ public class SWaitState extends State{
 		}
 	}
 
-	private MapLocation findRallyPoint(){
-		MapLocation[] myEncamp = rc.senseAlliedEncampmentSquares();
-		MapLocation rallyPoint = null;
-		if(myEncamp.length > 0){
-			MapLocation enemyHQ = rc.senseEnemyHQLocation();
-			int closestDist = 10000000;
-			MapLocation closestEncampment = null;
-			for(MapLocation ml : myEncamp){
-				int dist = ml.distanceSquaredTo(rc.getLocation());
-				if(dist < closestDist){
-					closestDist = dist;
-					closestEncampment = ml;
-				}
-			}
-			rallyPoint = new MapLocation((3*closestEncampment.x+enemyHQ.x)/4,(3*closestEncampment.y+enemyHQ.y)/4);
+	private void surround(MapLocation closestEnemy, MapLocation closestAlly, MapLocation myLocation) throws GameActionException {
+		MapLocation goalLoc = myLocation;
+		
+		if (myLocation.distanceSquaredTo(closestEnemy) > 25){
+			goalLoc = goalLoc.add(myLocation.directionTo(closestAlly),-1);
+			goalLoc = goalLoc.add(myLocation.directionTo(closestEnemy));
 		}
-		else if(rallyPoint == null)
-			rallyPoint = new MapLocation((2*rc.senseHQLocation().x+rc.senseEnemyHQLocation().x)/3,(2*rc.senseHQLocation().y+rc.senseEnemyHQLocation().y)/3);
-		return rallyPoint;
+		else if (myLocation.distanceSquaredTo(closestEnemy) > 9){
+			goalLoc = goalLoc.add(myLocation.directionTo(closestAlly));
+			goalLoc = goalLoc.add(myLocation.directionTo(closestEnemy));
+		}
+		else{
+			goalLoc = goalLoc.add(myLocation.directionTo(closestEnemy));
+			goalLoc = goalLoc.add(myLocation.directionTo(closestAlly));
+		}
+		Direction finalDir = myLocation.directionTo(goalLoc);
+		goToLocation(myLocation.add(finalDir), myLocation);
 	}
-
+	
 	private boolean goodPlace(MapLocation location, MapLocation alliedHQ, MapLocation [] encamp) {
 //		return ((3*location.x+location.y)%8==0);//pickaxe with gaps
 //		return ((2*location.x+location.y)%5==0);//pickaxe without gaps

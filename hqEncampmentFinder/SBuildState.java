@@ -8,7 +8,6 @@ package hqEncampmentFinder;
 import java.util.ArrayList;
 
 import battlecode.common.*;
-import battlecode.engine.instrumenter.lang.System;
 
 public class SBuildState extends State{
 	

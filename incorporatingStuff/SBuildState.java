@@ -8,7 +8,6 @@ package incorporatingStuff;
 import java.util.ArrayList;
 
 import battlecode.common.*;
-import battlecode.engine.instrumenter.lang.System;
 
 public class SBuildState extends State{
 
@@ -23,14 +22,14 @@ public class SBuildState extends State{
 	//public MapLocation[] closestEncamps;
 	public ArrayList<MapLocation> closestEncamps;
 	public MapLocation target;
-	
+
 	// constructor
 	public SBuildState(StateMachine rootSM){
 		this.stateID = SMConstants.SBUILDSTATE;
 		this.rootSM = rootSM;
 		this.rc = rootSM.getRC();
 	}
-	
+
 	public MapLocation getTarget(){
 		try {
 			int msgInt = this.rc.readBroadcast(PlayerConstants.ENCAMPMENT_LOCATION_CHANNEL);
@@ -47,7 +46,7 @@ public class SBuildState extends State{
 			return null;
 		}*/
 	}
-	
+
 	// when we enter this state, we need to figure out where the rally point is
 	@Override
 	public void doEntryAct() {
@@ -75,7 +74,7 @@ public class SBuildState extends State{
 				rc.setIndicatorString(0, "Build State. " + target.toString());
 				int channel = 13*target.x*target.x+5*target.y+3+PlayerConstants.BEING_TAKEN_CHANNEL;
 				this.rc.broadcast(channel, PlayerConstants.mapLocationToInt(target));
-			
+
 				if(nearbyEnemyRobots.length > 0){
 					int closestDistance = 10000000;
 					MapLocation closestEnemy = null;
@@ -90,13 +89,13 @@ public class SBuildState extends State{
 					}
 					goToLocation(closestEnemy, myLocation);
 				}
-				
+
 				else if(target.equals(myLocation)){
 					rc.captureEncampment(RobotType.ARTILLERY);
 				}
 
 				else{
-					goToLocation(target,myLocation);
+					goStraightToLocation(target,myLocation);
 				}
 			}
 		}catch(Exception e){
@@ -118,121 +117,7 @@ public class SBuildState extends State{
 		}
 		return closestRobot;
 	}
-	// rally point is a weighted average of our HQ position and opponent HQ position
-	private MapLocation findRallyPoint(){
-		MapLocation[] myEncamp = rc.senseAlliedEncampmentSquares();
-		MapLocation rallyPoint = null;
-		if(myEncamp.length > 0){
-			MapLocation enemyHQ = rc.senseEnemyHQLocation();
-			int closestDist = 10000000;
-			MapLocation closestEncampment = null;
-			for(MapLocation ml : myEncamp){
-				int dist = ml.distanceSquaredTo(rc.getLocation());
-				if(dist < closestDist){
-					closestDist = dist;
-					closestEncampment = ml;
-				}
-			}
-			rallyPoint = new MapLocation((3*closestEncampment.x+enemyHQ.x)/4,(3*closestEncampment.y+enemyHQ.y)/4);
-		}
-		else if(rallyPoint == null)
-			rallyPoint = new MapLocation((3*rc.senseHQLocation().x+rc.senseEnemyHQLocation().x)/4,(3*rc.senseHQLocation().y+rc.senseEnemyHQLocation().y)/4);
-		return rallyPoint;
-	}
 
-	private boolean goodPlace(MapLocation location) {
-//		return ((3*location.x+location.y)%8==0);//pickaxe with gaps
-//		return ((2*location.x+location.y)%5==0);//pickaxe without gaps
-//		return ((location.x+location.y)%2==0);//checkerboard
-		int d2 = location.distanceSquaredTo(alliedHQ);
-		return (d2>1 && d2<=64);
-	}
-	//Movement system
-	private void freeGo(MapLocation target, Robot[] allies,Robot[] enemies,Robot[] nearbyEnemies,MapLocation myLocation, MapLocation enemyHQ, MapLocation alliedHQ) throws GameActionException {
-		//This robot will be attracted to the goal and repulsed from other things
-		Direction toTarget = myLocation.directionTo(target);
-		int targetWeighting = targetWeight(myLocation.distanceSquaredTo(target), enemyHQ, alliedHQ);
-		MapLocation goalLoc = myLocation.add(toTarget,targetWeighting);//toward target, TODO weighted by the distance?
-
-		if (enemies.length==0){
-			//find closest allied robot. repel away from that robot.
-			if(allies.length>0){
-				MapLocation closestAlly = findClosest(allies);
-				goalLoc = goalLoc.add(myLocation.directionTo(closestAlly),-3);
-			}
-		}else if (allies.length<nearbyEnemies.length+3){
-			if(allies.length>0){//find closest allied robot. attract to that robot.
-				MapLocation closestAlly = findClosest(allies);
-				goalLoc = goalLoc.add(myLocation.directionTo(closestAlly),5);
-			}
-			if(nearbyEnemies.length>0){//avoid enemy
-				MapLocation closestEnemy = findClosest(nearbyEnemies);
-				goalLoc = goalLoc.add(myLocation.directionTo(closestEnemy),-10);
-			}
-		}else if (allies.length>=nearbyEnemies.length+3){
-			if(allies.length>0){
-				MapLocation closestAlly = findClosest(allies);
-				goalLoc = goalLoc.add(myLocation.directionTo(closestAlly),5);
-			}
-			if(nearbyEnemies.length>0){
-				MapLocation closestEnemy = findClosest(nearbyEnemies);
-				goalLoc = goalLoc.add(myLocation.directionTo(closestEnemy),10);
-			}else{// no nearby enemies; go toward far enemy
-				MapLocation closestEnemy = findClosest(enemies);
-				goalLoc = goalLoc.add(myLocation.directionTo(closestEnemy),10);
-			}
-		}
-		//TODO repel from allied mines?
-		//now use that direction
-		Direction finalDir = myLocation.directionTo(goalLoc);
-		if (Math.random()<.1)
-			finalDir = finalDir.rotateRight();
-		goToLocation(myLocation.add(finalDir), myLocation);
-	}
-	
-	private static int targetWeight(int dSquared, MapLocation enemyHQ, MapLocation alliedHQ){
-		int HQseparation = enemyHQ.distanceSquaredTo(alliedHQ);
-		if (dSquared>100){
-			if(Clock.getRoundNum()<1000){
-				if (HQseparation>900)
-					return 5;
-				else if (HQseparation>400)
-					return 10;
-				else
-					return 15;
-			}
-			else
-				return 15;
-		}else if (dSquared>9){
-			if(Clock.getRoundNum()<1000){
-				if (HQseparation>900)
-					return 2;
-				else if (HQseparation>400)
-					return 4;
-				else
-					return 6;
-			}
-			else
-				return 6;
-		}else{
-			return 1;
-		}
-	}
-
-	private MapLocation findClosest(Robot[] enemyRobots) throws GameActionException {
-		int closestDist = 1000000;
-		MapLocation closestEnemy=null;
-		for (int i=0;i<enemyRobots.length;i++){
-			Robot arobot = enemyRobots[i];
-			RobotInfo arobotInfo = rc.senseRobotInfo(arobot);
-			int dist = arobotInfo.location.distanceSquaredTo(rc.getLocation());
-			if (dist<closestDist){
-				closestDist = dist;
-				closestEnemy = arobotInfo.location;
-			}
-		}
-		return closestEnemy;
-	}	
 	// see SAttackState's goToLocation method - it is identical
 	public Direction movedFrom = null;
 
@@ -286,12 +171,13 @@ public class SBuildState extends State{
 */			for (int d: directionOffsets){
 				Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
 				if(rc.canMove(lookingAtCurrently)){
-					if((rc.senseMine(myLocation.add(lookingAtCurrently)))==null){
+					Team teamOfMine = rc.senseMine(myLocation.add(lookingAtCurrently));
+					if(teamOfMine == null || teamOfMine == rc.getTeam()){
 						if (this.movedFrom != lookingAtCurrently.opposite()){
 							this.movedFrom = lookingAtCurrently;
 							rc.move(lookingAtCurrently);
-/*							hasMoved = true;
-*/							break;
+							/*							hasMoved = true;
+							 */							break;
 						}
 						else{
 							continue;

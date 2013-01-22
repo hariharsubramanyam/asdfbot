@@ -6,13 +6,16 @@ public class SMConstants {
 	public final static int SWAITSTATE = 1;
 	public final static int SATTACKSTATE = 2;
 	public final static int SBUILDSTATE = 3;
+	public final static int SRALLYSTATE = 4;
 	
-	public final static int HDEFAULTSTATE = 4;
+	public final static int HDEFAULTSTATE = 5;
 	
 	public final static int SROUND200TRANSITION = -1;
 	public final static int SNUKETRANSITION = -2;
 	public final static int SBUILDNUKETRANSITION = -3;
 	public final static int SRALLYTRANSITION = -4;
+	public final static int SATTACKGROUPTRANSITION = -5;
+	public final static int WAITRALLYTRANSITION = -6;
 
 	public static State getState(StateMachine rootSM, int stateVal){
 		switch (stateVal){
@@ -20,6 +23,7 @@ public class SMConstants {
 		case SATTACKSTATE: return new SAttackState(rootSM);
 		case SBUILDSTATE: return new SBuildState(rootSM);
 		case HDEFAULTSTATE: return new HDefaultState(rootSM);
+		case SRALLYSTATE: return new SRallyState(rootSM);
 		default: return null;
 		}
 	}
@@ -28,6 +32,8 @@ public class SMConstants {
 		switch(transitionVal){
 		case SROUND200TRANSITION: return new SRound200Transition(rootSM);
 		case SNUKETRANSITION: return new SNukeTransition(rootSM);
+		case SATTACKGROUPTRANSITION: return new SAttackGroupFormedTransition(rootSM);
+		case WAITRALLYTRANSITION: return new WaitRallyTransition(rootSM);
 		default: return null;
 		}
 	}
@@ -36,8 +42,9 @@ public class SMConstants {
 		switch(stateID){
 		case SATTACKSTATE: return new int[]{};
 		case SBUILDSTATE: return new int[]{SNUKETRANSITION};
-		case SWAITSTATE: return new int[]{SNUKETRANSITION,SROUND200TRANSITION};
+		case SWAITSTATE: return new int[]{SNUKETRANSITION,SROUND200TRANSITION,WAITRALLYTRANSITION};
 		case HDEFAULTSTATE: return new int[]{};
+		case SRALLYSTATE: return new int[]{/*SATTACKGROUPTRANSITION*/};
 		default: return null;
 		}
 	}
