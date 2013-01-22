@@ -17,7 +17,6 @@ public class SAttackState extends State {
 		this.stateID = SMConstants.SATTACKSTATE;
 		this.rootSM = rootSM;
 		this.rc = rootSM.getRC();
-		inGroup = false;
 		enemyHQ = rc.senseEnemyHQLocation();
 		alliedHQ = rc.senseHQLocation();
 		this.traditionalRallyPoint = new MapLocation((int)(this.alliedHQ.x*.75+this.enemyHQ.x*.25),(int)(this.alliedHQ.y*.75+this.enemyHQ.y*.25));
@@ -42,13 +41,17 @@ public class SAttackState extends State {
 				myEncamp = rc.senseAlliedEncampmentSquares();
 				this.rc.setIndicatorString(2, ""+this.nearbyAlliedRobots.length);
 				
+				inGroup = false;
+				
+				if(!inGroup && nearbyAlliedRobots.length > PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP){
+					inGroup = true;
+				}
+				
 				if(!inGroup){
 					cm = this.getCenterOfMass((rc.senseNearbyGameObjects(Robot.class,1000000,rc.getTeam())));
 					this.goToLocation(cm);
 				}
-				if(!inGroup && nearbyAlliedRobots.length > PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP){
-					inGroup = true;
-				}
+				
 				if(inGroup){
 					MapLocation closestEnemy = this.findClosest(nearbyEnemyRobots, this.rc.getTeam().opponent());
 					if(closestEnemy != null){

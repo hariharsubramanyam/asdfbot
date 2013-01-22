@@ -7,7 +7,7 @@ public class SRound200Transition extends Transition {
 	public SRound200Transition(StateMachine rootSM){
 		this.rootSM = rootSM;
 		this.sourceStates = new int[] {SMConstants.SWAITSTATE};
-		this.targetState = SMConstants.SATTACKSTATE;
+		this.targetState = SMConstants.SRALLYSTATE;
 	}
 
 

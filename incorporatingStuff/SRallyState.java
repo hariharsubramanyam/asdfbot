@@ -43,6 +43,7 @@ public class SRallyState extends State{
 					goToLocation(closestEnemy, myLocation);
 				}
 				else{
+					rc.setIndicatorString(1, rallyPoint.toString());
 					goToLocation(rallyPoint, myLocation);
 				}
 			}
@@ -70,10 +71,12 @@ public class SRallyState extends State{
 		}
 		else if(rallyPoint == null)*/
 		MapLocation alliedHQ = rc.senseHQLocation();
-		MapLocation enemyHQ = rc.senseHQLocation();
-		MapLocation rallyPoint = alliedHQ.add(alliedHQ.directionTo(enemyHQ),(int)(0.8*alliedHQ.distanceSquaredTo(enemyHQ)));
-/*		rallyPoint = new MapLocation((7*rc.senseHQLocation().x+rc.senseEnemyHQLocation().x)/8,(7*rc.senseHQLocation().y+rc.senseEnemyHQLocation().y)/8);
-*/		return rallyPoint;
+		MapLocation enemyHQ = rc.senseEnemyHQLocation();
+		MapLocation rallyPt = new MapLocation((int)(alliedHQ.x*.9+enemyHQ.x*.1),(int)(alliedHQ.y*.9+enemyHQ.y*.1));
+/*		MapLocation rallyPoint = alliedHQ.add(alliedHQ.directionTo(enemyHQ),(int)(0.8*alliedHQ.distanceSquaredTo(enemyHQ)));*/
+//		rallyPoint = new MapLocation((int)(0.7*alliedHQ.x+0.3*enemyHQ.x),(int)(0.7*alliedHQ.y+0.3*enemyHQ.y));
+		rc.setIndicatorString(2, rallyPt.toString());
+		return rallyPt;
 	}
 
 /*	private boolean goodPlace(MapLocation location) {

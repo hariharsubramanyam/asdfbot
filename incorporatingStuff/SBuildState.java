@@ -101,6 +101,7 @@ public class SBuildState extends State{
 				}
 
 				else if(target.equals(myLocation)){
+					this.rc.broadcast(channel, 19541275);
 					if(encampType == 2)
 						rc.captureEncampment(RobotType.ARTILLERY);
 					else if(encampType == 3)

@@ -23,12 +23,16 @@ public class HDefaultState extends State{
 	public Robot[] nearbyAlliedRobots;
 	public Robot[] enemyRobots;
 	public Robot[] nearbyEnemyRobots;
+	public MapLocation[] alliedEncamp;
+	public ArrayList<MapLocation> alliedEncamps;
 	public MapLocation[] encamp;
 	public PriorityQueue<EncampmentSquare> openencamps;
 	public int numWaitBots = 0;
 	public double previousEnergon;
 	public boolean underAttack;
 	public int valOnArtilleryChannel;
+	public int encCount = 0;
+	public int encampTurns = 0;
 	
 	public HDefaultState(StateMachine rootSM){
 		this.stateID = SMConstants.SATTACKSTATE;
@@ -36,11 +40,11 @@ public class HDefaultState extends State{
 		this.rc = rootSM.getRC();
 	}
 		
-	public PriorityQueue<EncampmentSquare> sortencamps(MapLocation[] encamp){
+	public PriorityQueue<EncampmentSquare> sortencamps(MapLocation[] encamp, ArrayList<MapLocation> alliedEncamps){
 		PriorityQueue<EncampmentSquare> sortencamps = new PriorityQueue<EncampmentSquare>();
 		for(MapLocation mL : encamp){
 			EncampmentSquare currEncamp = new EncampmentSquare(mL.distanceSquaredTo(alliedHQ), mL);
-			if(!isTaken(currEncamp) && mL.distanceSquaredTo(alliedHQ) > 3 && mL.distanceSquaredTo(enemyHQ) >= mL.distanceSquaredTo(alliedHQ)){
+			if(!isTaken(currEncamp, alliedEncamps) && mL.distanceSquaredTo(alliedHQ) > 3 && mL.distanceSquaredTo(enemyHQ) >= mL.distanceSquaredTo(alliedHQ)){
 				sortencamps.add(currEncamp);
 			}
 		}
@@ -48,16 +52,32 @@ public class HDefaultState extends State{
 */		return sortencamps;
 	}
 	
-	public boolean isTaken(EncampmentSquare target){
+	public boolean isTaken(EncampmentSquare target, ArrayList<MapLocation> alliedEncamps){
 		try {
+			MapLocation targLoc = target.location;
 			int msgInt = 0;
 			int channel = 13*target.location.x*target.location.x+5*target.location.y+3+PlayerConstants.BEING_TAKEN_CHANNEL;
 			msgInt = this.rc.readBroadcast(channel);
-			if(msgInt == 19541235){
+			
+			if(alliedEncamps.contains(targLoc))
 				return true;
+
+			else if(msgInt == 19541235)
+				return true;
+			
+			else if(msgInt == 19541275){
+				if (encampTurns <= 25){
+					encampTurns++;
+					return true;
+				}
+				else{
+					encampTurns = 0;
+					return false;
+				}
 /*				MapLocation targLoc = PlayerConstants.intToMapLocation(msgInt);
 				return target.equals(new EncampmentSquare(targLoc.distanceSquaredTo(alliedHQ),targLoc));*/
 			}
+			
 			else
 				return false;
 		} catch (GameActionException e) {
@@ -118,13 +138,19 @@ public class HDefaultState extends State{
 					alliedHQ = rc.senseHQLocation();
 /*				rc.setIndicatorString(0, "" + numWaitBots);
 */							
+				alliedEncamp = rc.senseAlliedEncampmentSquares();
+				alliedEncamps = new ArrayList<MapLocation>();
+				
+				for(MapLocation l : alliedEncamp)
+					alliedEncamps.add(l);
+				
 				double hqDis = Math.sqrt(alliedHQ.distanceSquaredTo(enemyHQ));
 				alliedRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam());
 				nearbyAlliedRobots = rc.senseNearbyGameObjects(Robot.class,14,rc.getTeam());
 				enemyRobots = rc.senseNearbyGameObjects(Robot.class, 100000,rc.getTeam().opponent());
 				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class,14,rc.getTeam().opponent());
 				encamp = rc.senseEncampmentSquares(rc.getLocation(), 100000, Team.NEUTRAL);
-				openencamps = sortencamps(encamp);
+				openencamps = sortencamps(encamp, alliedEncamps);
 /*				rc.setIndicatorString(0, sortedEncamps.toString());
 *//*				ArrayList<MapLocation> encamps = new ArrayList<MapLocation>();
 				for(MapLocation camp : encamp){
@@ -161,14 +187,13 @@ public class HDefaultState extends State{
 					}
 				}
 				
+				int maxArts = Math.min(5, Math.round((float)openencamps.size()/5));
 				
 				int artCount = 0;
-				int encCount = 0;
-				int maxArts = Math.min(6, Math.round((float)openencamps.size()/5));
-				
+
 				for (EncampmentSquare e: openencamps){
 					int locVsEnemyHQ = e.location.distanceSquaredTo(enemyHQ);
-					if(e.distance<100 && artCount<maxArts && locVsEnemyHQ<(Math.pow((hqDis),2)+8)){
+					if(e.distance<64 && artCount<maxArts && locVsEnemyHQ<(Math.pow((hqDis),2)+8)){
 						artCount++;
 						encCount++;
 						e.setType(2);

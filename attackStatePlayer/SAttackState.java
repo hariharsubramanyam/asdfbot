@@ -32,6 +32,7 @@ public class SAttackState extends State {
 	public void doAction(){
 		try{
 			if(rc.isActive()){
+				rc.setIndicatorString(0, "Attack State.");
 				myLocation = rc.getLocation();
 				alliedRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam());
 				enemyRobots = rc.senseNearbyGameObjects(Robot.class, 100000,rc.getTeam().opponent());

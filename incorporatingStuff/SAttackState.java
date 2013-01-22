@@ -20,8 +20,7 @@ public class SAttackState extends State {
 		inGroup = false;
 		enemyHQ = rc.senseEnemyHQLocation();
 		alliedHQ = rc.senseHQLocation();
-/*		this.traditionalRallyPoint = alliedHQ.add(alliedHQ.directionTo(enemyHQ),(int)(0.08*alliedHQ.distanceSquaredTo(enemyHQ)));
-*/		this.traditionalRallyPoint = new MapLocation((int)(this.alliedHQ.x*.67+this.enemyHQ.x*.33),(int)(this.alliedHQ.y*.67+this.enemyHQ.y*.33));
+		this.traditionalRallyPoint = new MapLocation((int)(this.alliedHQ.x*.75+this.enemyHQ.x*.25),(int)(this.alliedHQ.y*.75+this.enemyHQ.y*.25));
 	}
 	@Override
 	public void doEntryAct(){}
@@ -33,13 +32,13 @@ public class SAttackState extends State {
 	public void doAction(){
 		try{
 			if(rc.isActive()){
+				rc.setIndicatorString(0, "Attack State.");
 				myLocation = rc.getLocation();
 				alliedRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam());
 				enemyRobots = rc.senseNearbyGameObjects(Robot.class, 100000,rc.getTeam().opponent());
 				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class, PlayerConstants.NEARBY_ENEMY_DIST_SQUARED,rc.getTeam().opponent());
 				nearbyAlliedRobots = rc.senseNearbyGameObjects(Robot.class, PlayerConstants.NEARBY_ALLY_DIST_SQUARED,rc.getTeam());
 				myEncamp = rc.senseAlliedEncampmentSquares();
-				rc.setIndicatorString(0, "Attack State.");
 				if(this.isHQUnderAttack() && rc.getLocation().distanceSquaredTo(alliedHQ) < PlayerConstants.WITHIN_HQ_RESCUING_RANGE_SQUARED){
 					this.goToLocation(alliedHQ);
 					return;
@@ -51,30 +50,19 @@ public class SAttackState extends State {
 					return;
 				}
 				
-				if(!inGroup && nearbyAlliedRobots.length < PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP){
-					MapLocation closestEnemy = this.findClosest(nearbyEnemyRobots, this.rc.getTeam().opponent());
-/*					MapLocation closestAlly = this.findClosest(nearbyAlliedRobots, this.rc.getTeam());
-*/					if(closestEnemy != null){
-/*						this.surround(closestEnemy, closestAlly, myLocation);*/
-						goToLocation(closestEnemy);
-						this.rc.setIndicatorString(1, "Going to enemy " + closestEnemy.toString());
-					}
-					else{
-						this.goToLocation(this.traditionalRallyPoint);
-						return;
-					}
-				}
-				
 				if(!inGroup && nearbyAlliedRobots.length > PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP){
 					inGroup = true;
 				}
 				
+				if(!inGroup && nearbyAlliedRobots.length < PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP){
+					this.goToLocation(this.traditionalRallyPoint);
+					return;
+				}
+
 				if(inGroup){
 					MapLocation closestEnemy = this.findClosest(nearbyEnemyRobots, this.rc.getTeam().opponent());
-/*					MapLocation closestAlly = this.findClosest(nearbyAlliedRobots, this.rc.getTeam());
-*/					if(closestEnemy != null){
-/*						this.surround(closestEnemy, closestAlly, myLocation);
-*/						goToLocation(closestEnemy);
+					if(closestEnemy != null){
+						this.goToLocation(closestEnemy);
 						this.rc.setIndicatorString(1, "Going to enemy " + closestEnemy.toString());
 					}
 					else{
@@ -100,25 +88,6 @@ public class SAttackState extends State {
 			return this.rc.readBroadcast(PlayerConstants.ARTILLERY_IN_SIGHT_MESSAGE);
 		}
 		catch(Exception ex){ ex.printStackTrace(); return 0;}
-	}
-	
-	private void surround(MapLocation closestEnemy, MapLocation closestAlly, MapLocation myLocation) throws GameActionException {
-		MapLocation goalLoc = myLocation;
-		
-		if (myLocation.distanceSquaredTo(closestEnemy) > 25){
-			goalLoc = goalLoc.add(myLocation.directionTo(closestAlly),-1);
-			goalLoc = goalLoc.add(myLocation.directionTo(closestEnemy));
-		}
-		else if (myLocation.distanceSquaredTo(closestEnemy) > 9){
-			goalLoc = goalLoc.add(myLocation.directionTo(closestAlly));
-			goalLoc = goalLoc.add(myLocation.directionTo(closestEnemy));
-		}
-		else{
-			goalLoc = goalLoc.add(myLocation.directionTo(closestEnemy));
-			goalLoc = goalLoc.add(myLocation.directionTo(closestAlly));
-		}
-		Direction finalDir = myLocation.directionTo(goalLoc);
-		goToLocation(myLocation.add(finalDir));
 	}
 	
 	private void goToLocation(MapLocation place)
