@@ -6,10 +6,16 @@ public class EncampmentLoc implements Comparable {
 	
 	public MapLocation location;
 	public int distanceFromHQ;
+	public int type;
 	
 	public EncampmentLoc(MapLocation l, int d) {
 		location = l;
 		distanceFromHQ = d;
+		type = 9;
+	}
+	
+	public void setType(int t){
+		type = t;
 	}
 	
 	public int compareTo(EncampmentLoc other){
