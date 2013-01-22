@@ -54,10 +54,10 @@ public class SAttackState extends State {
 						}
 					}
 					closestDist = 10000000;
-					if(nearbyAlliedRobots.length >= nearbyEnemyRobots.length){
-						goToLocation(closestEnemy);
+					if(nearbyAlliedRobots.length >= nearbyEnemyRobots.length + 5 ){
+						goToLocation(closestEnemy, myLocation);
 					}
-					else if(myLocation.distanceSquaredTo(alliedHQ) >= myLocation.distanceSquaredTo(enemyHQ)){
+					/*else if(myLocation.distanceSquaredTo(alliedHQ) >= myLocation.distanceSquaredTo(enemyHQ)){
 						MapLocation closestEncampment = null;
 						for(MapLocation ml : myEncamp){
 							int dist = ml.distanceSquaredTo(rc.getLocation());
@@ -67,14 +67,14 @@ public class SAttackState extends State {
 							}
 						}
 						goToLocation(closestEncampment);
-						//goToLocation(getHQCenterOfMassBroadcast());
-					}
+						
+					}*/
 					else{
-						goToLocation(closestEnemy);
+						goToLocation(getHQCenterOfMassBroadcast(), myLocation);
 					}
 				}
 				else{
-					goToLocation(enemyHQ);
+					goToLocation(enemyHQ, myLocation);
 				}
 			}
 		}catch(Exception e){e.printStackTrace();}
@@ -131,7 +131,7 @@ public class SAttackState extends State {
 		Direction finalDir = myLocation.directionTo(goalLoc);
 		if (Math.random()<.1)
 			finalDir = finalDir.rotateRight();
-		goToLocation(myLocation.add(finalDir));
+		goToLocation(myLocation.add(finalDir), myLocation);
 	}
 	
 	private static int targetWeight(int dSquared, MapLocation enemyHQ, MapLocation alliedHQ){
@@ -178,19 +178,19 @@ public class SAttackState extends State {
 		return closestEnemy;
 	}	
 
-	private void goToLocation(MapLocation place)
+	private void goToLocation(MapLocation place, MapLocation myLocation)
 			throws GameActionException {
-		int dist = rc.getLocation().distanceSquaredTo(place);
+		int dist = myLocation.distanceSquaredTo(place);
 		if(dist > 0){
 			int[] directionOffsets = {0,1,-1,2,-2};
-			Direction dir = rc.getLocation().directionTo(place);
+			Direction dir = myLocation.directionTo(place);
 			Direction firstMine = null;
 			boolean hasMoved = false;
 			for (int d: directionOffsets){
-				Team teamOfMine = null;
 				Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
 				if(rc.canMove(lookingAtCurrently)){
-					if((teamOfMine = (rc.senseMine(rc.getLocation().add(lookingAtCurrently))))==null){
+					Team teamOfMine = rc.senseMine(myLocation.add(lookingAtCurrently));
+					if(teamOfMine == null || teamOfMine == rc.getTeam()){
 						if (this.movedFrom != lookingAtCurrently.opposite()){
 							this.movedFrom = lookingAtCurrently;
 							rc.move(lookingAtCurrently);
@@ -199,8 +199,8 @@ public class SAttackState extends State {
 						}
 						else{
 							continue;
+						}
 					}
-				}
 
 					else if(firstMine == null && teamOfMine!=rc.getTeam()){
 						firstMine = Direction.values()[lookingAtCurrently.ordinal()];
@@ -209,9 +209,9 @@ public class SAttackState extends State {
 			}
 			if(!hasMoved){
 				if(firstMine != null){
-					rc.defuseMine(rc.getLocation().add(firstMine));
+					rc.defuseMine(myLocation.add(firstMine));
 				}
-/*				else if (place.distanceSquaredTo(rc.getLocation())>4){
+/*				else if (place.distanceSquaredTo(myLocation)>4){
 					rc.layMine();
 				}*/
 			}
@@ -238,7 +238,7 @@ public class SAttackState extends State {
 				continue;
 		}
 		if(!hasmoved){
-			goToLocation(closestEnemy);
+			//goToLocation(closestEnemy);
 		}
 	}
 
@@ -261,7 +261,7 @@ public class SAttackState extends State {
 				continue;
 		}
 		if(!hasmoved){
-			goToLocation(closestEncampment);
+			//goToLocation(closestEncampment);
 		}
 	}
 }

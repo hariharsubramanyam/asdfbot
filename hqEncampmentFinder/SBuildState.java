@@ -2,13 +2,21 @@
  * State for soldier state machine
  * Behavior - go to closest enemy or rally point
  */
-package trevPlayer2;
+package hqEncampmentFinder;
 
+
+import java.util.ArrayList;
 
 import battlecode.common.*;
+import battlecode.engine.instrumenter.lang.System;
 
 public class SBuildState extends State{
-
+	
+	private int encampChannel = 2345;
+	private int encampChannel2 = 1234;
+	private MapLocation encampTarget;
+	private int encampType;
+	
 	public MapLocation rallyPoint;
 	public MapLocation enemyHQ;
 	public MapLocation alliedHQ;
@@ -18,7 +26,9 @@ public class SBuildState extends State{
 	public Robot[] nearbyEnemyRobots;
 	public MapLocation[] encamp;
 	public MapLocation[] myEncamp;
-	public MapLocation closestEncamp;
+
+	//public MapLocation[] closestEncamps;
+	public ArrayList<MapLocation> closestEncamps;
 	
 	// constructor
 	public SBuildState(StateMachine rootSM){
@@ -30,13 +40,29 @@ public class SBuildState extends State{
 	// when we enter this state, we need to figure out where the rally point is
 	@Override
 	public void doEntryAct() {
-		rallyPoint = findRallyPoint();
+		try {
+			if (rc.readBroadcast(encampChannel) > 999999){
+				String broadcast = rc.readBroadcast(encampChannel)+"";
+				encampTarget = new MapLocation(Integer.parseInt(broadcast.substring(4, 7)),Integer.parseInt(broadcast.substring(1, 4)));
+				encampType = Integer.parseInt(broadcast.substring(0,1));
+				rc.broadcast(encampChannel, 0);
+			}
+			else if (rc.readBroadcast(encampChannel2) > 999999){
+				String broadcast = rc.readBroadcast(encampChannel2)+"";
+				encampTarget = new MapLocation(Integer.parseInt(broadcast.substring(4, 7)),Integer.parseInt(broadcast.substring(1, 4)));
+				encampType = Integer.parseInt(broadcast.substring(0,1));
+				rc.broadcast(encampChannel2, 0);
+			}
+		} catch (GameActionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	// no exit work
 	@Override
 	public void doExitAct() {}
 
-	// see SAttackState's doAction - it's very similar. Here, we go to the closest enemy. If there's no nearby enemy, go to the rally point
+	// see SAttackState's doAction -  it's very similar. Here, we go to the closest enemy. If there's no nearby enemy, go to the rally point
 	@Override
 	public void doAction() {
 		try{
@@ -48,43 +74,44 @@ public class SBuildState extends State{
 				myLocation = rc.getLocation();
 				alliedRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam());
 				enemyRobots = rc.senseNearbyGameObjects(Robot.class, 100000,rc.getTeam().opponent());
-				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class, 14,rc.getTeam().opponent());
-				encamp = rc.senseEncampmentSquares(rc.getLocation(), PlayerConstants.NEARBY_ENCAMPMENT_DIST_SQUARED, Team.NEUTRAL);
-				myEncamp = rc.senseAlliedEncampmentSquares();
-				closestEncamp = null;
-				for (MapLocation mL : encamp){
-					int closestEncampDis = 100000;
-					if(mL.distanceSquaredTo(myLocation)==0 && mL.distanceSquaredTo(rc.senseHQLocation())>4){
+				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class,14,rc.getTeam().opponent());
+				
+				if(myLocation.equals(encampTarget)){
+					if(encampType == 1)
+						rc.captureEncampment(RobotType.ARTILLERY);
+					else if(encampType == 2)
+						rc.captureEncampment(RobotType.GENERATOR);
+					else if(encampType == 3)
 						rc.captureEncampment(RobotType.SUPPLIER);
-						rallyPoint = new MapLocation((3*myLocation.x+rc.senseEnemyHQLocation().x)/4,(3*myLocation.y*rc.senseEnemyHQLocation().y)/4);
-						break;
-					}
-					else{
-						if(mL.distanceSquaredTo(myLocation) < closestEncampDis){
-							closestEncamp = mL;
+					else if(encampType == 4)
+						rc.captureEncampment(RobotType.SHIELDS);
+				}
+				else if(nearbyEnemyRobots.length > 0){
+					int closestDistance = 10000000;
+					MapLocation closestEnemy = null;
+					for(int i = 0; i < enemyRobots.length; i++){
+						Robot aRobot = enemyRobots[i];
+						RobotInfo aRobotInfo = rc.senseRobotInfo(aRobot);
+						int dist = aRobotInfo.location.distanceSquaredTo(rc.getLocation());
+						if(dist < closestDistance){
+							closestDistance = dist;
+							closestEnemy = aRobotInfo.location;
 						}
 					}
-				}
-/*				System.out.println("Nearby Encampments: "+ encamp.length);
-*/				if(nearbyEnemyRobots.length > 0){
-					goToLocation(findClosest(nearbyEnemyRobots), myLocation);
-				}
-				else if (encamp.length>0 && myEncamp.length < 3){
-					if(closestEncamp !=null)
-						goToLocation(closestEncamp, myLocation);
-					else
-						rc.layMine();
-				}
-				else{
-					if (goodPlace(myLocation)&&rc.senseMine(myLocation)==null && myLocation.distanceSquaredTo(rc.senseHQLocation())>4)
-						rc.layMine();
-					else
-						freeGo(rallyPoint, alliedRobots, enemyRobots, nearbyEnemyRobots, myLocation, enemyHQ, alliedHQ);
+					goToLocation(closestEnemy, myLocation);
+
 
 				}
+/*				else if (encamp.length > 0 && myEncamp.length < 3){
+					if(closestEncamp !=null)
+						goToLocation(closestEncamp,myLocation);
+						freeGo(closestEncamp, alliedRobots, enemyRobots, nearbyEnemyRobots, myLocation, enemyHQ, alliedHQ);
+				}*/
+				else{
+					goToLocation(encampTarget,myLocation);
+				}
 			}
-		}
-		catch(Exception e){
+		}catch(Exception e){
 			e.printStackTrace();
 		}
 	}
