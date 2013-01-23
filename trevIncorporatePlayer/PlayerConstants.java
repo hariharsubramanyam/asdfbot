@@ -1,4 +1,4 @@
-package hqEncampmentFinder;
+package trevIncorporatePlayer;
 
 import battlecode.common.MapLocation;
 
@@ -12,9 +12,12 @@ public class PlayerConstants {
 	public static final int WITHIN_HQ_RESCUING_RANGE_SQUARED = 400;
 	
 	// FORMAT: 1yyy0xxx
-	public static final int HQ_CENTER_OF_MASS_CHANNEL = 1337;
-	public static final int HQ_UNDER_ATTACK_CHANNEL  = 1234;
-	public static final int ARTILLERY_IN_SIGHT_MESSAGE = 2334;
+	public static final int HQ_CENTER_OF_MASS_CHANNEL = 4553;
+	public static final int ENCAMPMENT_LOCATION_CHANNEL = 6848;
+	public static final int BEING_TAKEN_CHANNEL = 7000;
+	public static final int STATE_ASSIGNMENT_CHANNEL = 932;
+	public static final int HQ_UNDER_ATTACK_CHANNEL  = 6842;
+	public static final int ARTILLERY_IN_SIGHT_MESSAGE = 6853;
 	
 	public static int mapLocationToInt(MapLocation loc){
 		// FORMAT 1yyy0xxx
@@ -39,10 +42,15 @@ public class PlayerConstants {
 			msg += x;
 		return Integer.parseInt(msg);
 	}
-
+	
+	public static int encampmentSquareToInt(EncampmentSquare next){
+		int message = 0;
+		message = (next.location.x + next.location.y*1000);
+		message += next.type*1000000;
+		return message;
+	}
+	
 	public static MapLocation intToMapLocation(int loc){
 		return new MapLocation(Integer.parseInt((""+loc).substring(5)),Integer.parseInt((""+loc).substring(1,4)));
 	}
-
-	
 }
