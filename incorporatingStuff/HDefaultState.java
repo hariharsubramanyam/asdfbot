@@ -44,7 +44,7 @@ public class HDefaultState extends State{
 		PriorityQueue<EncampmentSquare> sortencamps = new PriorityQueue<EncampmentSquare>();
 		for(MapLocation mL : encamp){
 			EncampmentSquare currEncamp = new EncampmentSquare(mL.distanceSquaredTo(alliedHQ), mL);
-			if(!isTaken(currEncamp, alliedEncamps) && mL.distanceSquaredTo(alliedHQ) > 3 && mL.distanceSquaredTo(enemyHQ) >= mL.distanceSquaredTo(alliedHQ)){
+			if(!isTaken(currEncamp, alliedEncamps) && mL.distanceSquaredTo(alliedHQ) > 3 && mL.distanceSquaredTo(enemyHQ) >= 2*mL.distanceSquaredTo(alliedHQ)){
 				sortencamps.add(currEncamp);
 			}
 		}
@@ -193,10 +193,17 @@ public class HDefaultState extends State{
 
 				for (EncampmentSquare e: openencamps){
 					int locVsEnemyHQ = e.location.distanceSquaredTo(enemyHQ);
-					if(e.distance<64 && artCount<maxArts && locVsEnemyHQ<(Math.pow((hqDis),2)+8)){
-						artCount++;
+					if(e.distance<100 && artCount<maxArts && locVsEnemyHQ<(Math.pow((hqDis),2)+8)){
+						if(encCount%2 == 0){
+							e.setType(2);
+						}
+						else{
+							if((encCount+1)%2 == 0)
+								e.setType(3);
+							else
+								e.setType(4);
+						}
 						encCount++;
-						e.setType(2);
 					}
 					else{
 						if(encCount%2 == 0){

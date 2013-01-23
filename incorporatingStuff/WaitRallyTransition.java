@@ -5,7 +5,7 @@ public class WaitRallyTransition extends Transition {
 	public WaitRallyTransition(StateMachine rootSM){
 		this.rootSM = rootSM;
 		this.sourceStates = new int[] {SMConstants.SWAITSTATE};
-		this.targetState = SMConstants.SATTACKSTATE;
+		this.targetState = SMConstants.SRALLYSTATE;
 	}
 
 

@@ -4,7 +4,7 @@ import battlecode.common.Robot;
 import battlecode.common.RobotType;
 
 public class SAttackGroupFormedTransition extends Transition{
-	public final int ALLIED_HQ_RADIUS_SQUARED = 36;
+	public final int ALLIED_HQ_RADIUS_SQUARED = 192;
 	public final int SOLDIERS_FOR_ATTACK_GROUP = 10;
 	
 	public SAttackGroupFormedTransition(StateMachine rootSM){
