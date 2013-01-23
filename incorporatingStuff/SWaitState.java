@@ -104,7 +104,7 @@ public class SWaitState extends State{
 				break;
 			}
 		}
-		return (d2>4 && d2<(int)(0.15*alliedHQ.distanceSquaredTo(enemyHQ)) && !isEncamp);
+		return (d2>4 && d2<Math.min((int)(0.04*alliedHQ.distanceSquaredTo(enemyHQ)),192) && !isEncamp);
 	}
 	
 	//Movement system
