@@ -78,7 +78,7 @@ public class HDefaultState extends State{
 				int[] directionOffsets = {0,1,-1,2,-2,3,-3,4};
 				for(int d : directionOffsets){
 					Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
-					if (rc.canMove(lookingAtCurrently) && Clock.getRoundNum()>0){
+					if (rc.canMove(lookingAtCurrently) && rc.senseMine(rc.getLocation().add(lookingAtCurrently)) == null &&Clock.getRoundNum()>0){
 						rc.spawn(lookingAtCurrently);
 						break;
 					}
@@ -113,20 +113,28 @@ public class HDefaultState extends State{
 		encampmentsToCapture = new ArrayList<EncampmentLoc>();
 		try{
 			MapLocation enemyHQ = rc.senseEnemyHQLocation();
-			double hqDis = Math.sqrt(myLocation.distanceSquaredTo(enemyHQ));
-			MapLocation[] encamps = rc.senseEncampmentSquares(myLocation, (int)Math.pow((Math.round((float)hqDis/2)),2), Team.NEUTRAL);
+			double hqDis = myLocation.distanceSquaredTo(enemyHQ);
+			MapLocation[] encamps = rc.senseEncampmentSquares(myLocation, (Math.round((float)hqDis/5)), Team.NEUTRAL);
 			for(MapLocation e : encamps){
 				if (e.distanceSquaredTo(myLocation)>4){
 					encampmentsToCapture.add(new EncampmentLoc(e, e.distanceSquaredTo(myLocation)));
 				}
 			}
 			Collections.sort(encampmentsToCapture);
+			while(encampmentsToCapture.size()>7){
+				encampmentsToCapture.remove(7);
+			}
+			/*ArrayList<EncampmentLoc> mid = new ArrayList<EncampmentLoc>();
+			for(int i=encampmentsToCapture.size()-1; i>=0; i--){
+				mid.add(encampmentsToCapture.get(i));
+			}*/
+			//encampmentsToCapture = mid;
 			int artCount = 0;
 			int encCount = 0;
 			int maxArts = Math.min(6, Math.round((float)encampmentsToCapture.size()/5));
 			for (EncampmentLoc e: encampmentsToCapture){
 				int locVsEnemyHQ = e.location.distanceSquaredTo(enemyHQ);
-				if(e.distanceFromHQ<100 && artCount<maxArts && locVsEnemyHQ<(Math.pow((hqDis),2)+8)){
+				if(e.distanceFromHQ<100 && artCount<maxArts && locVsEnemyHQ<hqDis+8){
 					artCount++;
 					encCount++;
 					e.setType(2);
