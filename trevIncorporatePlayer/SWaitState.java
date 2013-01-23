@@ -113,7 +113,7 @@ public class SWaitState extends State{
 		Direction toTarget = myLocation.directionTo(alliedHQ).opposite();
 		int targetWeighting = targetWeight(myLocation.distanceSquaredTo(alliedHQ), enemyHQ, alliedHQ);
 		MapLocation goalLoc = myLocation.add(toTarget,targetWeighting);//toward target, TODO weighted by the distance?
-		
+		goalLoc = goalLoc.add(myLocation.directionTo(enemyHQ));
 /*		goalLoc = goalLoc.add(myLocation.directionTo(enemyHQ),3);
 */		MapLocation closestAlly = findClosest(allies);
 		goalLoc = goalLoc.add(myLocation.directionTo(closestAlly), -8);
