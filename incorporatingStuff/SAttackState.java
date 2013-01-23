@@ -20,7 +20,7 @@ public class SAttackState extends State {
 		inGroup = false;
 		enemyHQ = rc.senseEnemyHQLocation();
 		alliedHQ = rc.senseHQLocation();
-		this.traditionalRallyPoint = new MapLocation((int)(this.alliedHQ.x*.75+this.enemyHQ.x*.25),(int)(this.alliedHQ.y*.75+this.enemyHQ.y*.25));
+		this.traditionalRallyPoint = new MapLocation((int)(this.alliedHQ.x*.9+this.enemyHQ.x*.1),(int)(this.alliedHQ.y*.9+this.enemyHQ.y*.1));
 	}
 	@Override
 	public void doEntryAct(){}

@@ -7,7 +7,7 @@ public class SNukeTransition extends Transition {
 	public SNukeTransition(StateMachine rootSM){
 		this.rootSM = rootSM;
 		this.sourceStates = new int[] {SMConstants.SWAITSTATE, SMConstants.SBUILDSTATE};
-		this.targetState = SMConstants.SRALLYSTATE;
+		this.targetState = SMConstants.SATTACKSTATE;
 	}
 
 	@Override
