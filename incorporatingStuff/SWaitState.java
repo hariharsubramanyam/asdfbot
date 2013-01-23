@@ -60,7 +60,7 @@ public class SWaitState extends State{
 				}
 				
 				else{
-					if (goodPlace(myLocation, alliedHQ, encamp)&&rc.senseMine(myLocation)==null && myLocation.distanceSquaredTo(rc.senseHQLocation())>4)
+					if (goodPlace(myLocation, alliedHQ, enemyHQ, encamp)&&rc.senseMine(myLocation)==null && myLocation.distanceSquaredTo(rc.senseHQLocation())>4)
 						rc.layMine();
 					else
 						findPlacesToLayMines(alliedHQ, alliedRobots, enemyRobots, nearbyEnemyRobots, myLocation, enemyHQ);
@@ -92,7 +92,7 @@ public class SWaitState extends State{
 		goToLocation(myLocation.add(finalDir), myLocation);
 	}
 	
-	private boolean goodPlace(MapLocation location, MapLocation alliedHQ, MapLocation [] encamp) {
+	private boolean goodPlace(MapLocation location, MapLocation alliedHQ, MapLocation enemyHQ, MapLocation [] encamp) {
 //		return ((3*location.x+location.y)%8==0);//pickaxe with gaps
 //		return ((2*location.x+location.y)%5==0);//pickaxe without gaps
 //		return ((location.x+location.y)%2==0);//checkerboard
@@ -104,7 +104,7 @@ public class SWaitState extends State{
 				break;
 			}
 		}
-		return (d2>4 && d2<192 && !isEncamp);
+		return (d2>4 && d2<(int)(0.15*alliedHQ.distanceSquaredTo(enemyHQ)) && !isEncamp);
 	}
 	
 	//Movement system

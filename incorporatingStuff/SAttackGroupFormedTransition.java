@@ -1,6 +1,7 @@
 package incorporatingStuff;
 
 import battlecode.common.Robot;
+import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
 
 public class SAttackGroupFormedTransition extends Transition{
