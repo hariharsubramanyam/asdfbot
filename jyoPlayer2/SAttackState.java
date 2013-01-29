@@ -11,6 +11,7 @@ public class SAttackState extends State {
 	
 	public MapLocation cm;
 	public boolean inGroup;
+	public boolean attackNow;
 	public MapLocation traditionalRallyPoint;
 	
 	public SAttackState(StateMachine rootSM){
@@ -20,7 +21,7 @@ public class SAttackState extends State {
 		inGroup = false;
 		enemyHQ = rc.senseEnemyHQLocation();
 		alliedHQ = rc.senseHQLocation();
-		this.traditionalRallyPoint = new MapLocation((int)(this.alliedHQ.x*.9+this.enemyHQ.x*.1),(int)(this.alliedHQ.y*.9+this.enemyHQ.y*.1));
+		this.traditionalRallyPoint = new MapLocation((int)(this.alliedHQ.x*.75+this.enemyHQ.x*.25),(int)(this.alliedHQ.y*.75+this.enemyHQ.y*.25));
 	}
 	@Override
 	public void doEntryAct(){}
@@ -36,10 +37,18 @@ public class SAttackState extends State {
 				myLocation = rc.getLocation();
 				alliedRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam());
 				enemyRobots = rc.senseNearbyGameObjects(Robot.class, 100000,rc.getTeam().opponent());
-				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class, PlayerConstants.NEARBY_ENEMY_DIST_SQUARED,rc.getTeam().opponent());
+				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class, 4,rc.getTeam().opponent());
 				nearbyAlliedRobots = rc.senseNearbyGameObjects(Robot.class, PlayerConstants.NEARBY_ALLY_DIST_SQUARED,rc.getTeam());
 				int numSols = this.numSoldier(nearbyAlliedRobots);
 				myEncamp = rc.senseAlliedEncampmentSquares();
+				if(rc.readBroadcast(58621) == 498)
+					attackNow = true;
+				
+				if (attackNow){
+					goToLocation(enemyHQ);
+					return;
+				}
+					
 				if(this.isHQUnderAttack() && rc.getLocation().distanceSquaredTo(alliedHQ) < PlayerConstants.WITHIN_HQ_RESCUING_RANGE_SQUARED){
 					this.goToLocation(alliedHQ);
 					return;

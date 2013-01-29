@@ -71,7 +71,7 @@ public class SRallyState extends State {
 					else if(myLocation.distanceSquaredTo(this.traditionalRallyPoint) < 192 && rc.hasUpgrade(Upgrade.PICKAXE) && goodPlace(myLocation, alliedHQ, encamp) && rc.senseMine(myLocation)==null)
 						rc.layMine();
 					else
-						this.goStraightToLocation(this.traditionalRallyPoint, myLocation);
+						this.goToLocation(this.traditionalRallyPoint);
 					return;
 				}
 
@@ -84,8 +84,9 @@ public class SRallyState extends State {
 					else{
 						if(myLocation.distanceSquaredTo(this.traditionalRallyPoint) < 192 && rc.hasUpgrade(Upgrade.PICKAXE) && goodPlace(myLocation, alliedHQ, encamp) && rc.senseMine(myLocation)==null)
 							rc.layMine();
-/*						else
-							this.moveTogether(this.traditionalRallyPoint, alliedHQ, alliedRobots, enemyRobots, nearbyEnemyRobots, myLocation, enemyHQ);
+						else
+							this.goToLocation(this.traditionalRallyPoint);
+/*							this.moveTogether(this.traditionalRallyPoint, alliedHQ, alliedRobots, enemyRobots, nearbyEnemyRobots, myLocation, enemyHQ);
 */						this.rc.setIndicatorString(1,"Going to enemyHQ " + enemyHQ.toString());
 					}
 					return;
@@ -203,8 +204,9 @@ public class SRallyState extends State {
 /*			boolean hasMoved = false;
 */			for (int d: directionOffsets){
 				Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
-				if(rc.canMove(lookingAtCurrently)){
-					if((rc.senseMine(myLocation.add(lookingAtCurrently)))==null){
+				if(rc.canMove(lookingAtCurrently) && !rc.getLocation().add(lookingAtCurrently).isAdjacentTo(alliedHQ)){
+					Team teamOfMine = rc.senseMine(myLocation.add(lookingAtCurrently));
+					if(teamOfMine==null || teamOfMine == rc.getTeam()){
 						if (this.movedFrom != lookingAtCurrently.opposite()){
 							this.movedFrom = lookingAtCurrently;
 							rc.move(lookingAtCurrently);

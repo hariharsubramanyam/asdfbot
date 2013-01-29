@@ -293,8 +293,9 @@ public class SBuildState extends State{
 /*			boolean hasMoved = false;
 */			for (int d: directionOffsets){
 				Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
-				if(rc.canMove(lookingAtCurrently)){
-					if((rc.senseMine(myLocation.add(lookingAtCurrently)))==null){
+				if(rc.canMove(lookingAtCurrently) && !rc.getLocation().add(lookingAtCurrently).isAdjacentTo(alliedHQ)){
+					Team teamOfMine = rc.senseMine(myLocation.add(lookingAtCurrently));
+					if(teamOfMine==null || teamOfMine == rc.getTeam()){
 						if (this.movedFrom != lookingAtCurrently.opposite()){
 							this.movedFrom = lookingAtCurrently;
 							rc.move(lookingAtCurrently);

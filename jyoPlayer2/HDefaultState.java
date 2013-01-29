@@ -80,16 +80,31 @@ public class HDefaultState extends State{
 				this.nukeHalfDone = true;
 			if(!this.enemyNukeHalfDone && rc.senseEnemyNukeHalfDone() == true)
 				this.enemyNukeHalfDone = true;
-			if(this.enemyNukeHalfDone && !this.nukeHalfDone)
+			if(this.enemyNukeHalfDone && !this.nukeHalfDone){
 				this.setToAttack = true;
-			if(setToAttack){
 				rc.broadcast(this.nukeChannel, 186254);
+			}
+			if(setToAttack){
 				if (!rc.hasUpgrade(Upgrade.DEFUSION))
 					rc.researchUpgrade(Upgrade.DEFUSION);
 				else if(rc.getTeamPower()<100.0 && !rc.hasUpgrade(Upgrade.PICKAXE))
 					rc.researchUpgrade(Upgrade.PICKAXE);
 				else
-					spawnSoldier();
+					if (rc.getTeamPower() < 100){
+						if (rc.readBroadcast(58621) != 498)
+							rc.broadcast(58621, 498);
+						rc.researchUpgrade(Upgrade.NUKE);
+					}
+					else{
+						if (Clock.getRoundNum() % 150 != 0){
+							if (rc.readBroadcast(58621) == 498)
+								rc.broadcast(58621, 0);
+						}
+						else
+							if (rc.readBroadcast(58621) != 498)
+								rc.broadcast(58621, 498);
+						spawnSoldier();
+					}
 			}
 			else{
 				int nearbyAllies = rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), 625, rc.getTeam()).length;
