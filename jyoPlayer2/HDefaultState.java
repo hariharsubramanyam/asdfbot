@@ -92,7 +92,12 @@ public class HDefaultState extends State{
 					spawnSoldier();
 			}
 			else{
-				if(rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), 625, rc.getTeam()).length > PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP)
+				int nearbyAllies = rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), 625, rc.getTeam()).length;
+				if(!rc.hasUpgrade(Upgrade.PICKAXE) && nearbyAllies == PlayerConstants.NUM_ROBOTS_IN_DEFEND_GROUP){
+					rc.researchUpgrade(Upgrade.PICKAXE);
+					nukeMode = false;
+				}
+				else if(nearbyAllies > PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP)
 					nukeMode = true;
 				else
 					nukeMode = false;
