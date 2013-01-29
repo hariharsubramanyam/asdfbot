@@ -11,6 +11,7 @@ public class SAttackState extends State {
 	
 	public MapLocation cm;
 	public boolean inGroup;
+	public boolean attackNow;
 	public MapLocation traditionalRallyPoint;
 	
 	public SAttackState(StateMachine rootSM){
@@ -20,7 +21,7 @@ public class SAttackState extends State {
 		inGroup = false;
 		enemyHQ = rc.senseEnemyHQLocation();
 		alliedHQ = rc.senseHQLocation();
-		this.traditionalRallyPoint = new MapLocation((int)(this.alliedHQ.x*.9+this.enemyHQ.x*.1),(int)(this.alliedHQ.y*.9+this.enemyHQ.y*.1));
+		this.traditionalRallyPoint = new MapLocation((int)(this.alliedHQ.x*.75+this.enemyHQ.x*.25),(int)(this.alliedHQ.y*.75+this.enemyHQ.y*.25));
 	}
 	@Override
 	public void doEntryAct(){}
@@ -36,9 +37,18 @@ public class SAttackState extends State {
 				myLocation = rc.getLocation();
 				alliedRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam());
 				enemyRobots = rc.senseNearbyGameObjects(Robot.class, 100000,rc.getTeam().opponent());
-				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class, PlayerConstants.NEARBY_ENEMY_DIST_SQUARED,rc.getTeam().opponent());
+				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class, 4,rc.getTeam().opponent());
 				nearbyAlliedRobots = rc.senseNearbyGameObjects(Robot.class, PlayerConstants.NEARBY_ALLY_DIST_SQUARED,rc.getTeam());
+				int numSols = this.numSoldier(nearbyAlliedRobots);
 				myEncamp = rc.senseAlliedEncampmentSquares();
+				if(rc.readBroadcast(58621) == 498)
+					attackNow = true;
+				
+				if (attackNow){
+					goToLocation(enemyHQ);
+					return;
+				}
+					
 				if(this.isHQUnderAttack() && rc.getLocation().distanceSquaredTo(alliedHQ) < PlayerConstants.WITHIN_HQ_RESCUING_RANGE_SQUARED){
 					this.goToLocation(alliedHQ);
 					return;
@@ -50,23 +60,42 @@ public class SAttackState extends State {
 					return;
 				}
 				
-				if(!inGroup && nearbyAlliedRobots.length < PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP){
+				if(!inGroup && numSols > PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP){
+					inGroup = true;
+				}
+				
+				if(!inGroup && numSols < PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP){
 					this.goToLocation(this.traditionalRallyPoint);
 					return;
 				}
-				if(!inGroup && nearbyAlliedRobots.length > PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP){
-					inGroup = true;
-				}
+
 				if(inGroup){
 					MapLocation closestEnemy = this.findClosest(nearbyEnemyRobots, this.rc.getTeam().opponent());
 					if(closestEnemy != null){
 						this.goToLocation(closestEnemy);
 						this.rc.setIndicatorString(1, "Going to enemy " + closestEnemy.toString());
 					}
+					else{
+						this.goToLocation(enemyHQ);
+						this.rc.setIndicatorString(1,"Going to enemyHQ " + enemyHQ.toString());
+					}
 					return;
 				}
 			}
 		}catch(Exception e){e.printStackTrace();}
+	}
+	
+	public int numSoldier(Robot[] robs){
+		int ns = 0;
+		RobotInfo robInf;
+		for(Robot r : robs){
+			try{
+				robInf = rc.senseRobotInfo(r);
+				if(robInf.type == RobotType.SOLDIER)
+					ns++;
+			}catch(Exception ex){ex.printStackTrace();}
+		}
+		return ns;
 	}
 	
 	private boolean isHQUnderAttack(){
@@ -121,6 +150,7 @@ public class SAttackState extends State {
 			}
 		}
 	}
+
 
 	private MapLocation findClosest(Robot[] robots, Team tm) throws GameActionException {
 		int closestDist = 1000000;

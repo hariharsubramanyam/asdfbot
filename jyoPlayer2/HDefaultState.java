@@ -114,6 +114,8 @@ public class HDefaultState extends State{
 				}
 				else if(nearbyAllies > PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP)
 					nukeMode = true;
+				else if(Clock.getRoundNum() > 2000 && Math.min(2500 - Clock.getRoundNum(), (int)(rc.getEnergon())) + 50 > 400 - rc.checkResearchProgress(Upgrade.NUKE))
+					nukeMode = true;
 				else
 					nukeMode = false;
 				if(nukeMode)

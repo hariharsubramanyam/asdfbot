@@ -4,41 +4,52 @@
  */
 package team092;
 
-/*
- * If I'm the closest to an encampment:
- * 	Go to the encampment
- * else:
- * 	Free-go and plant mine
- */
+
+import java.util.ArrayList;
 
 import battlecode.common.*;
 
 public class SBuildState extends State{
 	
-	public boolean findingEncampment;
+	private int encampChannel = 9551;
+	private MapLocation encampTarget;
+	private int encampType;
+	
 	public MapLocation rallyPoint;
+	public MapLocation enemyHQ;
+	public MapLocation alliedHQ;
+	public MapLocation myLocation;
+	public Robot[] alliedRobots;
+	public Robot[] enemyRobots;
+	public Robot[] nearbyEnemyRobots;
+	public MapLocation[] encamp;
+	public MapLocation[] myEncamp;
+
+	//public MapLocation[] closestEncamps;
+	public ArrayList<MapLocation> closestEncamps;
 	
-	public MapLocation goalEncampment;
-	public RobotType encampmentType;
-	
-	public int turnsWithoutMineLaying;
 	// constructor
 	public SBuildState(StateMachine rootSM){
 		this.stateID = SMConstants.SBUILDSTATE;
-		this.goalEncampment = null;
 		this.rootSM = rootSM;
 		this.rc = rootSM.getRC();
 	}
 
-	// Find rally point
+	// when we enter this state, we need to figure out where the rally point is
 	@Override
 	public void doEntryAct() {
-		this.rallyPoint = findRallyPoint();
-
-		this.encampmentType = ((rc.getRobot().getID()/4)%3==0) ? RobotType.GENERATOR : RobotType.SUPPLIER;
-		this.findingEncampment = rc.getRobot().getID()%4 == 0;
+		try {
+			if (rc.readBroadcast(encampChannel) > 999999){
+				String broadcast = rc.readBroadcast(encampChannel)+"";
+				encampTarget = new MapLocation(Integer.parseInt(broadcast.substring(4, 7)),Integer.parseInt(broadcast.substring(1, 4)));
+				encampType = Integer.parseInt(broadcast.substring(0,1));
+				rc.broadcast(encampChannel, 0);
+			}
+		} catch (GameActionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
-	
 	// no exit work
 	@Override
 	public void doExitAct() {}
@@ -48,36 +59,52 @@ public class SBuildState extends State{
 	public void doAction() {
 		try{
 			if(rc.isActive()){
-				if(this.findingEncampment){
-					if(this.goalEncampment == null){
-						MapLocation[] nearbyLocs = this.rc.senseEncampmentSquares(rc.senseHQLocation(), 100, Team.NEUTRAL);
-						if(nearbyLocs != null && nearbyLocs.length > 0)
-							this.goalEncampment = nearbyLocs[(this.rc.getRobot().getID()/2)%nearbyLocs.length];
-						if(this.goalEncampment == null || this.goalEncampment.equals(rc.senseHQLocation().add(Direction.SOUTH))){
-							this.goalEncampment = null;
-							this.findingEncampment = false;
-							return;
+/*				if (rootSM.rc.readBroadcast(39842) == 186254){
+					PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP = 10;
+					this.rootSM.goToState(SMConstants.SATTACKSTATE);
+				}*/
+				if(enemyHQ == null)
+					enemyHQ = rc.senseEnemyHQLocation();
+				if(alliedHQ == null)
+					alliedHQ = rc.senseHQLocation();
+				myLocation = rc.getLocation();
+				alliedRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam());
+				enemyRobots = rc.senseNearbyGameObjects(Robot.class, 100000,rc.getTeam().opponent());
+				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class,14,rc.getTeam().opponent());
+				
+				if(myLocation.equals(encampTarget)){
+					if(encampType == 2)
+						rc.captureEncampment(RobotType.ARTILLERY);
+					else if(encampType == 3)
+						rc.captureEncampment(RobotType.GENERATOR);
+					else if(encampType == 4)
+						rc.captureEncampment(RobotType.SUPPLIER);
+					else if(encampType == 9)
+						rc.captureEncampment(RobotType.GENERATOR);
+				}
+				else if(nearbyEnemyRobots.length > 0){
+					int closestDistance = 10000000;
+					MapLocation closestEnemy = null;
+					for(int i = 0; i < enemyRobots.length; i++){
+						Robot aRobot = enemyRobots[i];
+						RobotInfo aRobotInfo = rc.senseRobotInfo(aRobot);
+						int dist = aRobotInfo.location.distanceSquaredTo(rc.getLocation());
+						if(dist < closestDistance){
+							closestDistance = dist;
+							closestEnemy = aRobotInfo.location;
 						}
 					}
-					if(this.rc.getLocation().equals(this.goalEncampment)){
-						this.rc.captureEncampment(RobotType.ARTILLERY);
-					}
-					else if(this.rc.getLocation().isAdjacentTo(this.goalEncampment) && !this.rc.canMove(this.rc.getLocation().directionTo(this.goalEncampment)))
-						this.rootSM.goToState(SMConstants.SATTACKSTATE);
-					else
-						this.goToLocation(this.goalEncampment, this.rc.getLocation());
+					goToLocation(closestEnemy, myLocation);
+
+
 				}
+/*				else if (encamp.length > 0 && myEncamp.length < 3){
+					if(closestEncamp !=null)
+						goToLocation(closestEncamp,myLocation);
+						freeGo(closestEncamp, alliedRobots, enemyRobots, nearbyEnemyRobots, myLocation, enemyHQ, alliedHQ);
+				}*/
 				else{
-					if(this.turnsWithoutMineLaying > 5)
-						this.rootSM.goToState(SMConstants.SATTACKSTATE);
-					if (goodPlace(rc.getLocation())&&rc.senseMine(rc.getLocation())==null && rc.getLocation().distanceSquaredTo(rc.senseHQLocation())>4){
-						rc.layMine();
-						this.turnsWithoutMineLaying = 0;
-					}
-					else{
-						freeGo(rallyPoint, rc.senseNearbyGameObjects(Robot.class, 100000, rc.getTeam()), rc.senseNearbyGameObjects(Robot.class, 100000, rc.getTeam().opponent()), rc.senseNearbyGameObjects(Robot.class, 25, rc.getTeam().opponent()), rc.getLocation(), rc.senseEnemyHQLocation(), rc.senseHQLocation());					
-						this.turnsWithoutMineLaying++;
-					}
+					goStraightToLocation(encampTarget,myLocation);
 				}
 			}
 		}catch(Exception e){
@@ -85,6 +112,20 @@ public class SBuildState extends State{
 		}
 	}
 
+	public MapLocation closestRobot(Robot[] Robots, MapLocation myLocation) throws GameActionException{
+		int closestDist = 10000000;
+		MapLocation closestRobot = null;
+		for(int i = 0; i < Robots.length; i++){
+			Robot aRobot = Robots[i];
+			RobotInfo aRobotInfo = rc.senseRobotInfo(aRobot);
+			int dist = aRobotInfo.location.distanceSquaredTo(myLocation);
+			if(dist < closestDist){
+				closestDist = dist;
+				closestRobot = aRobotInfo.location;
+			}
+		}
+		return closestRobot;
+	}
 	// rally point is a weighted average of our HQ position and opponent HQ position
 	private MapLocation findRallyPoint(){
 		MapLocation[] myEncamp = rc.senseAlliedEncampmentSquares();
@@ -108,10 +149,12 @@ public class SBuildState extends State{
 	}
 
 	private boolean goodPlace(MapLocation location) {
-		int d2 = location.distanceSquaredTo(rc.senseHQLocation());
-		return (d2>1 && d2<=100);
+//		return ((3*location.x+location.y)%8==0);//pickaxe with gaps
+//		return ((2*location.x+location.y)%5==0);//pickaxe without gaps
+//		return ((location.x+location.y)%2==0);//checkerboard
+		int d2 = location.distanceSquaredTo(alliedHQ);
+		return (d2>1 && d2<=64);
 	}
-	
 	//Movement system
 	private void freeGo(MapLocation target, Robot[] allies,Robot[] enemies,Robot[] nearbyEnemies,MapLocation myLocation, MapLocation enemyHQ, MapLocation alliedHQ) throws GameActionException {
 		//This robot will be attracted to the goal and repulsed from other things
@@ -198,7 +241,6 @@ public class SBuildState extends State{
 		}
 		return closestEnemy;
 	}	
-	
 	// see SAttackState's goToLocation method - it is identical
 	public Direction movedFrom = null;
 
@@ -235,7 +277,48 @@ public class SBuildState extends State{
 				if(firstMine != null){
 					rc.defuseMine(myLocation.add(firstMine));
 				}
+/*				else if (place.distanceSquaredTo(myLocation)>4){
+					rc.layMine();
+				}*/
 			}
+		}
+	}
+
+	private void goStraightToLocation(MapLocation place, MapLocation myLocation)
+			throws GameActionException {
+		int dist = myLocation.distanceSquaredTo(place);
+		if(dist > 0){
+			int[] directionOffsets = {0,1,-1};
+			Direction dir = myLocation.directionTo(place);
+/*			boolean hasMoved = false;
+*/			for (int d: directionOffsets){
+				Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
+				if(rc.canMove(lookingAtCurrently) && !rc.getLocation().add(lookingAtCurrently).isAdjacentTo(alliedHQ)){
+					Team teamOfMine = rc.senseMine(myLocation.add(lookingAtCurrently));
+					if(teamOfMine==null || teamOfMine == rc.getTeam()){
+						if (this.movedFrom != lookingAtCurrently.opposite()){
+							this.movedFrom = lookingAtCurrently;
+							rc.move(lookingAtCurrently);
+/*							hasMoved = true;
+*/							break;
+						}
+						else{
+							continue;
+						}
+					}
+					else{
+						if (this.movedFrom != lookingAtCurrently.opposite()){
+							rc.defuseMine(myLocation.add(lookingAtCurrently));
+						}
+						else{
+							continue;
+						}
+					}
+				}
+			}
+/*			if(!hasMoved){
+					rc.layMine();
+			}*/
 		}
 	}
 
