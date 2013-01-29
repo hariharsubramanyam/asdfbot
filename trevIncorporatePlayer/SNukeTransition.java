@@ -24,7 +24,11 @@ public class SNukeTransition extends Transition {
 	@Override
 	public boolean isTriggered() {
 		try {
-			return rootSM.rc.senseEnemyNukeHalfDone();
+			if(rootSM.rc.senseEnemyNukeHalfDone()){
+				PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP = 10;
+				return true;
+			}
+			return false;
 		} catch (GameActionException e) {return false;}
 	}
 

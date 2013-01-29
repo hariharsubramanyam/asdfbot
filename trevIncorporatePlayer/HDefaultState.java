@@ -9,12 +9,14 @@ import battlecode.common.MapLocation;
 import battlecode.common.Robot;
 import battlecode.common.Clock;
 import battlecode.common.Team;
+import battlecode.common.Upgrade;
 
 public class HDefaultState extends State{
 	
 	private ArrayList<EncampmentLoc> encampmentsToCapture;
 	public MapLocation myLocation;
 	public Robot[] nearbyRobots;
+	private boolean foundEncamps;
 	private int lastBroadcast;
 	private int encampChannel = 2345;
 	public HDefaultState(StateMachine rootSM){
@@ -22,8 +24,7 @@ public class HDefaultState extends State{
 		this.rootSM = rootSM;
 		this.rc = rootSM.getRC();
 		this.myLocation = rc.getLocation();
-		setEncampmentsToCapture();
-		lastBroadcast = 9999999;
+		this.foundEncamps = false;
 		
 		
 	}
@@ -63,29 +64,41 @@ public class HDefaultState extends State{
 	public void doAction() {
 		try{
 			if(this.rc.isActive()){
-				for (int i = 0; i<encampmentsToCapture.size(); i++){
-					System.out.println("Distance: "+encampmentsToCapture.get(i).distanceFromHQ);
+
+//				MapLocation teamCM = this.getTeamCenterOfMass();
+//				this.rc.setIndicatorString(0, teamCM.toString());
+//				if(teamCM != null)
+//					this.sendCenterOfMassMessage(teamCM);
+				if(rc.senseEnemyNukeHalfDone() && !rc.hasUpgrade(Upgrade.DEFUSION)){
+					rc.researchUpgrade(Upgrade.DEFUSION);
+				}
+				else if(rc.getTeamPower()<100.0 && !rc.hasUpgrade(Upgrade.PICKAXE)){
+					rc.researchUpgrade(Upgrade.PICKAXE);
+				}
+				else{
+					Direction dir = rc.getLocation().directionTo(rc.senseEnemyHQLocation());
+					int[] directionOffsets = {0,1,-1,2,-2,3,-3,4};
+					for(int d : directionOffsets){
+						Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
+						if (rc.canMove(lookingAtCurrently) && rc.senseMine(rc.getLocation().add(lookingAtCurrently)) == null &&Clock.getRoundNum()>0){
+							rc.spawn(lookingAtCurrently);
+							break;
+						}
+					}
+				}
+				if(!foundEncamps){
+					setEncampmentsToCapture();
+					lastBroadcast = 9999999;
 				}
 				if(rc.readBroadcast(encampChannel) != lastBroadcast){
 					lastBroadcast = createNextBroadcast();
 					rc.broadcast(encampChannel, lastBroadcast);
 				}
-//				MapLocation teamCM = this.getTeamCenterOfMass();
-//				this.rc.setIndicatorString(0, teamCM.toString());
-//				if(teamCM != null)
-//					this.sendCenterOfMassMessage(teamCM);
-				Direction dir = rc.getLocation().directionTo(rc.senseEnemyHQLocation());
-				int[] directionOffsets = {0,1,-1,2,-2,3,-3,4};
-				for(int d : directionOffsets){
-					Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
-					if (rc.canMove(lookingAtCurrently) && rc.senseMine(rc.getLocation().add(lookingAtCurrently)) == null &&Clock.getRoundNum()>0){
-						rc.spawn(lookingAtCurrently);
-						break;
-					}
-				}
 			}
 		}catch(Exception ex){ex.printStackTrace();}
 	}
+	
+
 	
 	public MapLocation getTeamCenterOfMass(){
 		this.nearbyRobots = this.rc.senseNearbyGameObjects(Robot.class);
@@ -114,7 +127,7 @@ public class HDefaultState extends State{
 		try{
 			MapLocation enemyHQ = rc.senseEnemyHQLocation();
 			double hqDis = myLocation.distanceSquaredTo(enemyHQ);
-			MapLocation[] encamps = rc.senseEncampmentSquares(myLocation, (Math.round((float)hqDis/5)), Team.NEUTRAL);
+			MapLocation[] encamps = rc.senseEncampmentSquares(myLocation, (Math.round((float)hqDis/4)), Team.NEUTRAL);
 			for(MapLocation e : encamps){
 				if (e.distanceSquaredTo(myLocation)>4){
 					encampmentsToCapture.add(new EncampmentLoc(e, e.distanceSquaredTo(myLocation)));
@@ -154,6 +167,7 @@ public class HDefaultState extends State{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		foundEncamps = true;
 	}
 	
 	public int createNextBroadcast(){

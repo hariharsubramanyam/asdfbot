@@ -7,8 +7,10 @@ public class SMConstants {
 	public final static int SATTACKSTATE = 2;
 	public final static int SBUILDSTATE = 3;
 	public final static int SRALLYSTATE = 4;
+	public final static int SSCOUTSTATE = 5;
+
 	
-	public final static int HDEFAULTSTATE = 5;
+	public final static int HDEFAULTSTATE = 6;
 	
 	public final static int SROUND200TRANSITION = -1;
 	public final static int SNUKETRANSITION = -2;
@@ -24,6 +26,9 @@ public class SMConstants {
 		case SBUILDSTATE: return new SBuildState(rootSM);
 		case HDEFAULTSTATE: return new HDefaultState(rootSM);
 		case SRALLYSTATE: return new SRallyState(rootSM);
+		case SSCOUTSTATE: return new SScoutState(rootSM);
+
+		
 		default: return null;
 		}
 	}
@@ -45,6 +50,8 @@ public class SMConstants {
 		case SWAITSTATE: return new int[]{SNUKETRANSITION,SROUND200TRANSITION,WAITRALLYTRANSITION};
 		case HDEFAULTSTATE: return new int[]{};
 		case SRALLYSTATE: return new int[]{SATTACKGROUPTRANSITION};
+		case SSCOUTSTATE: return new int[]{};
+
 		default: return null;
 		}
 	}
