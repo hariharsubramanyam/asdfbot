@@ -7,6 +7,8 @@ package incorporatingStuff;
 
 import java.util.ArrayList;
 
+import nukebot.SMConstants;
+
 import battlecode.common.*;
 
 public class SBuildState extends State{
@@ -111,6 +113,9 @@ public class SBuildState extends State{
 					else if(encampType == 9)
 						rc.captureEncampment(RobotType.GENERATOR);
 				}
+				
+				else if(this.rc.getLocation().isAdjacentTo(this.target) && !this.rc.canMove(this.rc.getLocation().directionTo(this.target)))
+					this.rootSM.goToState(SMConstants.SATTACKSTATE);
 
 				else{
 					goStraightToLocation(target,myLocation);

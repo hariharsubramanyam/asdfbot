@@ -58,6 +58,8 @@ public class HDefaultState extends State{
 		try{
 			if(rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), 625, rc.getTeam()).length > PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP)
 				nukeMode = true;
+			else
+				nukeMode = false;
 			if(nukeMode)
 				this.rc.researchUpgrade(Upgrade.NUKE);
 			else
