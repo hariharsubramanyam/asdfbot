@@ -117,10 +117,16 @@ public class SWaitState extends State{
 	//Movement system
 	private void findPlacesToLayMines(MapLocation alliedHQ, Robot[] allies,Robot[] enemies,Robot[] nearbyEnemies,MapLocation myLocation, MapLocation enemyHQ) throws GameActionException {
 		//This robot will be attracted to the goal and repulsed from other things
+		MapLocation[] alliedMines = rc.senseMineLocations(myLocation, 600, rc.getTeam());
+		MapLocation closestMine = null;
+		if (alliedMines.length > 0)
+			closestMine = findClosestMine(alliedMines);
 		Direction toTarget = myLocation.directionTo(alliedHQ).opposite();
 		int targetWeighting = targetWeight(myLocation.distanceSquaredTo(alliedHQ), enemyHQ, alliedHQ);
 		MapLocation goalLoc = myLocation.add(toTarget,targetWeighting);//toward target, TODO weighted by the distance?
 		goalLoc = goalLoc.add(myLocation.directionTo(enemyHQ));
+		if (closestMine != null)
+			goalLoc = goalLoc.add(myLocation.directionTo(closestMine), -3);
 /*		goalLoc = goalLoc.add(myLocation.directionTo(enemyHQ),3);
 */		MapLocation closestAlly = findClosest(allies);
 		goalLoc = goalLoc.add(myLocation.directionTo(closestAlly), -8);
@@ -129,7 +135,7 @@ public class SWaitState extends State{
 		Direction finalDir = myLocation.directionTo(goalLoc);
 /*		if (Math.random()<.1)
 			finalDir = finalDir.rotateRight();*/
-		goToLocation(myLocation.add(finalDir), myLocation);
+		goStraightToLocation(myLocation.add(finalDir), myLocation);
 	}
 	
 	private static int targetWeight(int dSquared, MapLocation enemyHQ, MapLocation alliedHQ){
@@ -176,6 +182,19 @@ public class SWaitState extends State{
 		}
 		return closestEnemy;
 	}
+	
+	private MapLocation findClosestMine(MapLocation[] mines) throws GameActionException {
+		int closestDist = 1000000;
+		MapLocation closestMine=null;
+		for (int i=0;i<mines.length;i++){
+			int dist = mines[i].distanceSquaredTo(rc.getLocation());
+			if (dist<closestDist){
+				closestDist = dist;
+				closestMine = mines[i];
+			}
+		}
+		return closestMine;
+	}
 
 	// see SAttackState's goToLocation method - it is identical
 	public Direction movedFrom = null;
@@ -216,6 +235,43 @@ public class SWaitState extends State{
 					rc.layMine();
 				}*/
 			}
+		}
+	}
+	
+	private void goStraightToLocation(MapLocation place, MapLocation myLocation)
+			throws GameActionException {
+		int dist = myLocation.distanceSquaredTo(place);
+		if(dist > 0){
+			int[] directionOffsets = {0,1,-1};
+			Direction dir = myLocation.directionTo(place);
+/*			boolean hasMoved = false;
+*/			for (int d: directionOffsets){
+				Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
+				if(rc.canMove(lookingAtCurrently)){
+					if((rc.senseMine(myLocation.add(lookingAtCurrently)))==null){
+						if (this.movedFrom != lookingAtCurrently.opposite()){
+							this.movedFrom = lookingAtCurrently;
+							rc.move(lookingAtCurrently);
+/*							hasMoved = true;
+*/							break;
+						}
+						else{
+							continue;
+						}
+					}
+					else{
+						if (this.movedFrom != lookingAtCurrently.opposite()){
+							rc.defuseMine(myLocation.add(lookingAtCurrently));
+						}
+						else{
+							continue;
+						}
+					}
+				}
+			}
+/*			if(!hasMoved){
+					rc.layMine();
+			}*/
 		}
 	}
 

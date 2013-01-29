@@ -48,13 +48,13 @@ public class SRallyState extends State {
 				encamp = rc.senseEncampmentSquares(rc.getLocation(), 100000, Team.NEUTRAL);
 				myEncamp = rc.senseAlliedEncampmentSquares();
 				if(this.isHQUnderAttack() && rc.getLocation().distanceSquaredTo(alliedHQ) < PlayerConstants.WITHIN_HQ_RESCUING_RANGE_SQUARED){
-					this.goToLocation(alliedHQ);
+					this.goStraightToLocation(alliedHQ, myLocation);
 					return;
 				}
 
 				int artilleryInRangeMsg = this.getHQArtilleryMessage();
 				if(artilleryInRangeMsg != 0){
-					this.goToLocation(PlayerConstants.intToMapLocation(artilleryInRangeMsg));
+					this.goStraightToLocation(PlayerConstants.intToMapLocation(artilleryInRangeMsg), myLocation);
 					return;
 				}
 
@@ -63,7 +63,15 @@ public class SRallyState extends State {
 				}
 
 				if(!inGroup && numSols < PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP){
-					this.goToRallyPt(this.traditionalRallyPoint);
+					MapLocation closestEnemy = this.findClosest(nearbyEnemyRobots, this.rc.getTeam().opponent());
+					if(closestEnemy != null){
+						this.goToLocation(closestEnemy);
+						this.rc.setIndicatorString(1, "Going to enemy " + closestEnemy.toString());
+					}
+					else if(myLocation.distanceSquaredTo(this.traditionalRallyPoint) < 192 && rc.hasUpgrade(Upgrade.PICKAXE) && goodPlace(myLocation, alliedHQ, encamp) && rc.senseMine(myLocation)==null)
+						rc.layMine();
+					else
+						this.goStraightToLocation(this.traditionalRallyPoint, myLocation);
 					return;
 				}
 
@@ -74,8 +82,11 @@ public class SRallyState extends State {
 						this.rc.setIndicatorString(1, "Going to enemy " + closestEnemy.toString());
 					}
 					else{
-						this.moveTogether(this.traditionalRallyPoint, alliedHQ, alliedRobots, enemyRobots, nearbyEnemyRobots, myLocation, enemyHQ);
-						this.rc.setIndicatorString(1,"Going to enemyHQ " + enemyHQ.toString());
+						if(myLocation.distanceSquaredTo(this.traditionalRallyPoint) < 192 && rc.hasUpgrade(Upgrade.PICKAXE) && goodPlace(myLocation, alliedHQ, encamp) && rc.senseMine(myLocation)==null)
+							rc.layMine();
+/*						else
+							this.moveTogether(this.traditionalRallyPoint, alliedHQ, alliedRobots, enemyRobots, nearbyEnemyRobots, myLocation, enemyHQ);
+*/						this.rc.setIndicatorString(1,"Going to enemyHQ " + enemyHQ.toString());
 					}
 					return;
 				}
@@ -183,42 +194,40 @@ public class SRallyState extends State {
 		}
 	}
 	
-	private void goToRallyPt(MapLocation place)
+	private void goStraightToLocation(MapLocation place, MapLocation myLocation)
 			throws GameActionException {
-		int dist = rc.getLocation().distanceSquaredTo(place);
+		int dist = myLocation.distanceSquaredTo(place);
 		if(dist > 0){
-			int[] directionOffsets = {0,1,-1,2,-2};
-			Direction dir = rc.getLocation().directionTo(place);
-			Direction firstMine = null;
-			MapLocation hqloc = rc.senseHQLocation();
-			for (int d: directionOffsets){
+			int[] directionOffsets = {0,1,-1};
+			Direction dir = myLocation.directionTo(place);
+/*			boolean hasMoved = false;
+*/			for (int d: directionOffsets){
 				Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
-				Team teamOfMine = rc.senseMine(rc.getLocation().add(lookingAtCurrently));
-				if(rc.canMove(lookingAtCurrently) && !rc.getLocation().add(lookingAtCurrently).isAdjacentTo(hqloc)){
-					if(teamOfMine == null || teamOfMine == this.rc.getTeam()){
+				if(rc.canMove(lookingAtCurrently)){
+					if((rc.senseMine(myLocation.add(lookingAtCurrently)))==null){
 						if (this.movedFrom != lookingAtCurrently.opposite()){
 							this.movedFrom = lookingAtCurrently;
 							rc.move(lookingAtCurrently);
-							hasMoved = true;
-							break;
+/*							hasMoved = true;
+*/							break;
 						}
 						else{
 							continue;
+						}
 					}
-				}
-
-					else if(firstMine == null && teamOfMine!=rc.getTeam()){
-						firstMine = Direction.values()[lookingAtCurrently.ordinal()];
+					else{
+						if (this.movedFrom != lookingAtCurrently.opposite()){
+							rc.defuseMine(myLocation.add(lookingAtCurrently));
+						}
+						else{
+							continue;
+						}
 					}
 				}
 			}
-			if(!hasMoved){
-				if(firstMine != null){
-					rc.defuseMine(rc.getLocation().add(firstMine));
-				}
-				else if(rc.hasUpgrade(Upgrade.PICKAXE) && goodPlace(myLocation, alliedHQ, encamp))
+/*			if(!hasMoved){
 					rc.layMine();
-			}
+			}*/
 		}
 	}
 

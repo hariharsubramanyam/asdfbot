@@ -106,8 +106,10 @@ public class HDefaultState extends State{
 						this.rc.researchUpgrade(Upgrade.NUKE);
 					else
 						this.rc.researchUpgrade(Upgrade.PICKAXE);
+				else if(rc.getTeamPower() < 100)
+					this.rc.researchUpgrade(Upgrade.NUKE);
 				else
-					spawnSoldier();				
+					spawnSoldier();
 			}
 		}catch(Exception ex){ex.printStackTrace();}
 	}

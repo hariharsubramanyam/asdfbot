@@ -104,7 +104,7 @@ public class SBuildState extends State{
 						freeGo(closestEncamp, alliedRobots, enemyRobots, nearbyEnemyRobots, myLocation, enemyHQ, alliedHQ);
 				}*/
 				else{
-					goToLocation(encampTarget,myLocation);
+					goStraightToLocation(encampTarget,myLocation);
 				}
 			}
 		}catch(Exception e){
