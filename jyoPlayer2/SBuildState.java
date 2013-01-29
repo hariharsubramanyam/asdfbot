@@ -11,7 +11,7 @@ import battlecode.common.*;
 
 public class SBuildState extends State{
 	
-	private int encampChannel = 2345;
+	private int encampChannel = 9551;
 	private MapLocation encampTarget;
 	private int encampType;
 	
