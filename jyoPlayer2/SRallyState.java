@@ -32,10 +32,12 @@ public class SRallyState extends State {
 	public void doAction(){
 		try{
 			if(rc.isActive()){
+/*				rc.setIndicatorString(1, "got message.");
+
 				if (rootSM.rc.readBroadcast(39842) == 186254){
 					PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP = 10;
 					this.rootSM.goToState(SMConstants.SATTACKSTATE);
-				}
+				}*/
 				rc.setIndicatorString(0, "Rally State.");
 				myLocation = rc.getLocation();
 				alliedRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam());
@@ -48,17 +50,17 @@ public class SRallyState extends State {
 					this.goToLocation(alliedHQ);
 					return;
 				}
-				
+
 				int artilleryInRangeMsg = this.getHQArtilleryMessage();
 				if(artilleryInRangeMsg != 0){
 					this.goToLocation(PlayerConstants.intToMapLocation(artilleryInRangeMsg));
 					return;
 				}
-				
+
 				if(!inGroup && numSols > PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP){
 					inGroup = true;
 				}
-				
+
 				if(!inGroup && numSols < PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP){
 					this.goToLocation(this.traditionalRallyPoint);
 					return;
@@ -77,6 +79,7 @@ public class SRallyState extends State {
 					return;
 				}
 			}
+			
 		}catch(Exception e){e.printStackTrace();}
 	}
 	
@@ -108,6 +111,24 @@ public class SRallyState extends State {
 		catch(Exception ex){ ex.printStackTrace(); return 0;}
 	}
 	
+	private boolean goodPlace(MapLocation location, MapLocation alliedHQ, MapLocation [] encamp) {
+//		return ((3*location.x+location.y)%8==0);//pickaxe with gaps
+//		return ((2*location.x+location.y)%5==0);//pickaxe without gaps
+//		return ((location.x+location.y)%2==0);//checkerboard
+		int d2 = location.distanceSquaredTo(alliedHQ);
+		boolean isEncamp = false;
+		for (MapLocation mL : encamp){
+			if(mL.equals(myLocation)){
+				isEncamp = true;
+				break;
+			}
+		}
+		if (rc.hasUpgrade(Upgrade.PICKAXE))
+			return (d2>4 && d2<192 && !isEncamp && (2*location.x+location.y)%5==0);
+		else
+			return (d2>4 && d2<192 && !isEncamp);
+	}
+	
 	private void moveTogether(MapLocation toGo, MapLocation alliedHQ, Robot[] allies,Robot[] enemies,Robot[] nearbyEnemies,MapLocation myLocation, MapLocation enemyHQ) throws GameActionException {
 		//This robot will be attracted to the goal and repulsed from other things
 		Direction toTarget = myLocation.directionTo(toGo);
@@ -125,6 +146,8 @@ public class SRallyState extends State {
 		goToLocation(myLocation.add(finalDir));
 	}
 	
+	boolean hasMoved = false;
+	
 	private void goToLocation(MapLocation place)
 			throws GameActionException {
 		int dist = rc.getLocation().distanceSquaredTo(place);
@@ -133,7 +156,6 @@ public class SRallyState extends State {
 			Direction dir = rc.getLocation().directionTo(place);
 			Direction firstMine = null;
 			MapLocation hqloc = rc.senseHQLocation();
-			boolean hasMoved = false;
 			for (int d: directionOffsets){
 				Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
 				Team teamOfMine = rc.senseMine(rc.getLocation().add(lookingAtCurrently));

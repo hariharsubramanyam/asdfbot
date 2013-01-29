@@ -83,7 +83,7 @@ public class HDefaultState extends State{
 			if(this.enemyNukeHalfDone && !this.nukeHalfDone)
 				this.setToAttack = true;
 			if(setToAttack){
-				rc.broadcast(39482, 186254);
+				rc.broadcast(this.nukeChannel, 186254);
 				if (!rc.hasUpgrade(Upgrade.DEFUSION))
 					rc.researchUpgrade(Upgrade.DEFUSION);
 				else if(rc.getTeamPower()<100.0 && !rc.hasUpgrade(Upgrade.PICKAXE))
@@ -97,7 +97,10 @@ public class HDefaultState extends State{
 				else
 					nukeMode = false;
 				if(nukeMode)
-					this.rc.researchUpgrade(Upgrade.NUKE);
+					if (rc.hasUpgrade(Upgrade.PICKAXE))
+						this.rc.researchUpgrade(Upgrade.NUKE);
+					else
+						this.rc.researchUpgrade(Upgrade.PICKAXE);
 				else
 					spawnSoldier();				
 			}
@@ -143,10 +146,10 @@ public class HDefaultState extends State{
 			//encampmentsToCapture = mid;
 			int artCount = 0;
 			int encCount = 0;
-			int maxArts = Math.min(6, Math.round((float)encampmentsToCapture.size()/5));
+			int maxArts = Math.min(6, Math.round((float)encampmentsToCapture.size()/2));
 			for (EncampmentLoc e: encampmentsToCapture){
 				int locVsEnemyHQ = e.location.distanceSquaredTo(enemyHQ);
-				if(e.distanceFromHQ<100 && artCount<maxArts && locVsEnemyHQ<hqDis+8){
+				if(e.distanceFromHQ<170 && artCount<maxArts && locVsEnemyHQ<hqDis+8){
 					artCount++;
 					encCount++;
 					e.setType(2);

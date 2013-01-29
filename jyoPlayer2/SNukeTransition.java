@@ -6,7 +6,7 @@ public class SNukeTransition extends Transition {
 	
 	public SNukeTransition(StateMachine rootSM){
 		this.rootSM = rootSM;
-		this.sourceStates = new int[] {SMConstants.SWAITSTATE, SMConstants.SBUILDSTATE/*, SMConstants.SRALLYSTATE*/};
+		this.sourceStates = new int[] {SMConstants.SWAITSTATE, SMConstants.SBUILDSTATE, SMConstants.SRALLYSTATE};
 		this.targetState = SMConstants.SATTACKSTATE;
 	}
 
@@ -25,7 +25,7 @@ public class SNukeTransition extends Transition {
 	public boolean isTriggered() {
 		try {
 			if (rootSM.rc.readBroadcast(39842) == 186254){
-				PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP = 10;
+/*					PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP = 10;*/
 				return true;
 			}
 			return false;

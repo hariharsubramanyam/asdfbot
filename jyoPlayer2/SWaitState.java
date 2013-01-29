@@ -38,6 +38,10 @@ public class SWaitState extends State{
 	public void doAction() {
 		try{
 			if(rc.isActive()){
+/*				if (rootSM.rc.readBroadcast(39842) == 186254){
+					PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP = 10;
+					this.rootSM.goToState(SMConstants.SATTACKSTATE);
+				}*/
 				
 				if(enemyHQ == null)
 					enemyHQ = rc.senseEnemyHQLocation();
@@ -104,7 +108,10 @@ public class SWaitState extends State{
 				break;
 			}
 		}
-		return (d2>4 && d2<192 && !isEncamp);
+		if (rc.hasUpgrade(Upgrade.PICKAXE))
+			return (d2>4 && d2<192 && !isEncamp && (2*location.x+location.y)%5==0);
+		else
+			return (d2>4 && d2<192 && !isEncamp);
 	}
 	
 	//Movement system

@@ -59,6 +59,10 @@ public class SBuildState extends State{
 	public void doAction() {
 		try{
 			if(rc.isActive()){
+/*				if (rootSM.rc.readBroadcast(39842) == 186254){
+					PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP = 10;
+					this.rootSM.goToState(SMConstants.SATTACKSTATE);
+				}*/
 				if(enemyHQ == null)
 					enemyHQ = rc.senseEnemyHQLocation();
 				if(alliedHQ == null)
