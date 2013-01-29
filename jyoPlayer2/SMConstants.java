@@ -44,7 +44,7 @@ public class SMConstants {
 		case SBUILDSTATE: return new int[]{SNUKETRANSITION};
 		case SWAITSTATE: return new int[]{SNUKETRANSITION,SROUND200TRANSITION,WAITRALLYTRANSITION};
 		case HDEFAULTSTATE: return new int[]{};
-		case SRALLYSTATE: return new int[]{SATTACKGROUPTRANSITION};
+		case SRALLYSTATE: return new int[]{/*SNUKETRANSITION*/};
 		default: return null;
 		}
 	}

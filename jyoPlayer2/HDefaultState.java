@@ -20,6 +20,10 @@ public class HDefaultState extends State{
 	private ArrayList<EncampmentLoc> encampmentsToCapture;
 	private int lastBroadcast;
 	private int encampChannel = 9551;
+	private int nukeChannel = 39842;
+	public boolean nukeHalfDone;
+	public boolean enemyNukeHalfDone;
+	public boolean setToAttack;
 	
 	public HDefaultState(StateMachine rootSM){
 		this.stateID = SMConstants.HDEFAULTSTATE;
@@ -29,6 +33,9 @@ public class HDefaultState extends State{
 		nukeMode = false;
 		setEncampmentsToCapture();
 		lastBroadcast = 9999999;
+		this.nukeHalfDone = false;
+		this.enemyNukeHalfDone = false;
+		this.setToAttack = false;
 	}
 	
 	public void sendCenterOfMassMessage(MapLocation loc){
@@ -69,14 +76,31 @@ public class HDefaultState extends State{
 				lastBroadcast = createNextBroadcast();
 				rc.broadcast(encampChannel, lastBroadcast);
 			}
-			if(rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), 625, rc.getTeam()).length > PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP)
-				nukeMode = true;
-			else
-				nukeMode = false;
-			if(nukeMode)
-				this.rc.researchUpgrade(Upgrade.NUKE);
-			else
-				spawnSoldier();
+			if(!this.nukeHalfDone && rc.checkResearchProgress(Upgrade.NUKE) >= 200)
+				this.nukeHalfDone = true;
+			if(!this.enemyNukeHalfDone && rc.senseEnemyNukeHalfDone() == true)
+				this.enemyNukeHalfDone = true;
+			if(this.enemyNukeHalfDone && !this.nukeHalfDone)
+				this.setToAttack = true;
+			if(setToAttack){
+				rc.broadcast(39482, 186254);
+				if (!rc.hasUpgrade(Upgrade.DEFUSION))
+					rc.researchUpgrade(Upgrade.DEFUSION);
+				else if(rc.getTeamPower()<100.0 && !rc.hasUpgrade(Upgrade.PICKAXE))
+					rc.researchUpgrade(Upgrade.PICKAXE);
+				else
+					spawnSoldier();
+			}
+			else{
+				if(rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), 625, rc.getTeam()).length > PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP)
+					nukeMode = true;
+				else
+					nukeMode = false;
+				if(nukeMode)
+					this.rc.researchUpgrade(Upgrade.NUKE);
+				else
+					spawnSoldier();				
+			}
 		}catch(Exception ex){ex.printStackTrace();}
 	}
 	

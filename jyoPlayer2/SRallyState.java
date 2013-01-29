@@ -1,129 +1,144 @@
-/**
- * State for soldier state machine
- * Behavior - go to closest enemy or rally point
- */
 package jyoPlayer2;
-
 
 import battlecode.common.*;
 
-public class SRallyState extends State{
+public class SRallyState extends State {
 
-	// this is where our robots group together
-	public MapLocation rallyPoint;
-
-	// constructor
+	public Direction movedFrom;
+	public MapLocation enemyHQ, alliedHQ, myLocation;
+	public Robot[] alliedRobots, enemyRobots, nearbyEnemyRobots, nearbyAlliedRobots;
+	public MapLocation[] myEncamp;
+	
+	public MapLocation cm;
+	public boolean inGroup;
+	public MapLocation traditionalRallyPoint;
+	
 	public SRallyState(StateMachine rootSM){
 		this.stateID = SMConstants.SRALLYSTATE;
 		this.rootSM = rootSM;
 		this.rc = rootSM.getRC();
+		inGroup = false;
+		enemyHQ = rc.senseEnemyHQLocation();
+		alliedHQ = rc.senseHQLocation();
+		this.traditionalRallyPoint = new MapLocation((int)(this.alliedHQ.x*.9+this.enemyHQ.x*.1),(int)(this.alliedHQ.y*.9+this.enemyHQ.y*.1));
 	}
-
-	// when we enter this state, we need to figure out where the rally point is
 	@Override
-	public void doEntryAct() {
-		rallyPoint = findRallyPoint();
-	}
+	public void doEntryAct(){}
 
-	// no exit work
 	@Override
-	public void doExitAct() {}
+	public void doExitAct(){}
 
-	// see SAttackState's doAction - it's very similar. Here, we go to the closest enemy. If there's no nearby enemy, go to the rally point
 	@Override
-	public void doAction() {
+	public void doAction(){
 		try{
 			if(rc.isActive()){
+				if (rootSM.rc.readBroadcast(39842) == 186254){
+					PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP = 10;
+					this.rootSM.goToState(SMConstants.SATTACKSTATE);
+				}
 				rc.setIndicatorString(0, "Rally State.");
-				MapLocation myLocation = rc.getLocation();
-				Robot[] enemyRobots = rc.senseNearbyGameObjects(Robot.class, 100000,rc.getTeam().opponent());
-
-				if(enemyRobots.length > 0){
-					MapLocation closestEnemy = closestRobot(enemyRobots);
-					goToLocation(closestEnemy, myLocation);
+				myLocation = rc.getLocation();
+				alliedRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam());
+				enemyRobots = rc.senseNearbyGameObjects(Robot.class, 100000,rc.getTeam().opponent());
+				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class, PlayerConstants.NEARBY_ENEMY_DIST_SQUARED,rc.getTeam().opponent());
+				nearbyAlliedRobots = rc.senseNearbyGameObjects(Robot.class, PlayerConstants.NEARBY_ALLY_DIST_SQUARED,rc.getTeam());
+				int numSols = this.numSoldier(nearbyAlliedRobots);
+				myEncamp = rc.senseAlliedEncampmentSquares();
+				if(this.isHQUnderAttack() && rc.getLocation().distanceSquaredTo(alliedHQ) < PlayerConstants.WITHIN_HQ_RESCUING_RANGE_SQUARED){
+					this.goToLocation(alliedHQ);
+					return;
 				}
-				else{
-					rc.setIndicatorString(1, rallyPoint.toString());
-					goToLocation(rallyPoint, myLocation);
+				
+				int artilleryInRangeMsg = this.getHQArtilleryMessage();
+				if(artilleryInRangeMsg != 0){
+					this.goToLocation(PlayerConstants.intToMapLocation(artilleryInRangeMsg));
+					return;
+				}
+				
+				if(!inGroup && numSols > PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP){
+					inGroup = true;
+				}
+				
+				if(!inGroup && numSols < PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP){
+					this.goToLocation(this.traditionalRallyPoint);
+					return;
+				}
+
+				if(inGroup){
+					MapLocation closestEnemy = this.findClosest(nearbyEnemyRobots, this.rc.getTeam().opponent());
+					if(closestEnemy != null){
+						this.goToLocation(closestEnemy);
+						this.rc.setIndicatorString(1, "Going to enemy " + closestEnemy.toString());
+					}
+					else{
+						this.moveTogether(this.traditionalRallyPoint, alliedHQ, alliedRobots, enemyRobots, nearbyEnemyRobots, myLocation, enemyHQ);
+						this.rc.setIndicatorString(1,"Going to enemyHQ " + enemyHQ.toString());
+					}
+					return;
 				}
 			}
+		}catch(Exception e){e.printStackTrace();}
+	}
+	
+	public int numSoldier(Robot[] robs){
+		int ns = 0;
+		RobotInfo robInf;
+		for(Robot r : robs){
+			try{
+				robInf = rc.senseRobotInfo(r);
+				if(robInf.type == RobotType.SOLDIER)
+					ns++;
+			}catch(Exception ex){ex.printStackTrace();}
 		}
-		catch(Exception e){
-			e.printStackTrace();
-		}
+		return ns;
+	}
+	
+	private boolean isHQUnderAttack(){
+		try{
+			return this.rc.readBroadcast(PlayerConstants.HQ_UNDER_ATTACK_CHANNEL) == 1;
+		}catch(Exception ex){ex.printStackTrace();return false; }
 	}
 
-	private MapLocation findRallyPoint(){
-/*		MapLocation[] myEncamp = rc.senseAlliedEncampmentSquares();
-		MapLocation rallyPoint = null;
-		if(myEncamp.length > 0){
-			MapLocation enemyHQ = rc.senseEnemyHQLocation();
-			int closestDist = 10000000;
-			MapLocation closestEncampment = null;
-			for(MapLocation ml : myEncamp){
-				int dist = ml.distanceSquaredTo(enemyHQ);
-				if(dist < closestDist){
-					closestDist = dist;
-					closestEncampment = ml;
-				}
-			}
-			rallyPoint = new MapLocation((3*closestEncampment.x+enemyHQ.x)/4,(3*closestEncampment.y+enemyHQ.y)/4);
+	//Movement system
+
+	private int getHQArtilleryMessage(){
+		try{
+			return this.rc.readBroadcast(PlayerConstants.ARTILLERY_IN_SIGHT_MESSAGE);
 		}
-		else if(rallyPoint == null)*/
-		MapLocation alliedHQ = rc.senseHQLocation();
-		MapLocation enemyHQ = rc.senseEnemyHQLocation();
-		MapLocation rallyPt = new MapLocation((int)(alliedHQ.x*.9+enemyHQ.x*.1),(int)(alliedHQ.y*.9+enemyHQ.y*.1));
-/*		MapLocation rallyPoint = alliedHQ.add(alliedHQ.directionTo(enemyHQ),(int)(0.8*alliedHQ.distanceSquaredTo(enemyHQ)));*/
-//		rallyPoint = new MapLocation((int)(0.7*alliedHQ.x+0.3*enemyHQ.x),(int)(0.7*alliedHQ.y+0.3*enemyHQ.y));
-		rc.setIndicatorString(2, rallyPt.toString());
-		return rallyPt;
+		catch(Exception ex){ ex.printStackTrace(); return 0;}
 	}
-
-/*	private boolean goodPlace(MapLocation location) {
-//		return ((3*location.x+location.y)%8==0);//pickaxe with gaps
-		return ((2*location.x+location.y)%5==0);//pickaxe without gaps
-		return ((location.x+location.y)%2==0);//checkerboard
-	}*/
-	// rally point is a weighted average of our HQ position and opponent HQ position
-/*	private MapLocation findRallyPoint() {
-		MapLocation enemyLoc = rc.senseEnemyHQLocation();
-		MapLocation ourLoc = rc.senseHQLocation();
-		int x = (enemyLoc.x + 2*ourLoc.x)/3;
-		int y = (enemyLoc.y + 2*ourLoc.y)/3;
-		return new MapLocation(x,y);
-	}*/
-
-	public MapLocation closestRobot(Robot[] Robots) throws GameActionException{
-		int closestDist = 10000000;
-		MapLocation closestRobot = null;
-		for(int i = 0; i < Robots.length; i++){
-			Robot aRobot = Robots[i];
-			RobotInfo aRobotInfo = rc.senseRobotInfo(aRobot);
-			int dist = aRobotInfo.location.distanceSquaredTo(rc.getLocation());
-			if(dist < closestDist){
-				closestDist = dist;
-				closestRobot = aRobotInfo.location;
-			}
-		}
-		return closestRobot;
+	
+	private void moveTogether(MapLocation toGo, MapLocation alliedHQ, Robot[] allies,Robot[] enemies,Robot[] nearbyEnemies,MapLocation myLocation, MapLocation enemyHQ) throws GameActionException {
+		//This robot will be attracted to the goal and repulsed from other things
+		Direction toTarget = myLocation.directionTo(toGo);
+		int targetWeighting = 10;
+		MapLocation goalLoc = myLocation.add(toTarget,targetWeighting);//toward target, TODO weighted by the distance?
+		goalLoc = goalLoc.add(myLocation.directionTo(enemyHQ));
+/*		goalLoc = goalLoc.add(myLocation.directionTo(enemyHQ),3);
+*/		MapLocation closestAlly = findClosest(allies, rc.getTeam());
+		goalLoc = goalLoc.add(myLocation.directionTo(closestAlly), 5);
+		//TODO repel from allied mines?
+		//now use that direction
+		Direction finalDir = myLocation.directionTo(goalLoc);
+/*		if (Math.random()<.1)
+			finalDir = finalDir.rotateRight();*/
+		goToLocation(myLocation.add(finalDir));
 	}
-
-
-	// see SAttackState's goToLocation method - it is identical
-	public Direction movedFrom = null;
-	private void goToLocation(MapLocation place, MapLocation myLocation)
+	
+	private void goToLocation(MapLocation place)
 			throws GameActionException {
-		int dist = myLocation.distanceSquaredTo(place);
+		int dist = rc.getLocation().distanceSquaredTo(place);
 		if(dist > 0){
 			int[] directionOffsets = {0,1,-1,2,-2};
-			Direction dir = myLocation.directionTo(place);
+			Direction dir = rc.getLocation().directionTo(place);
 			Direction firstMine = null;
+			MapLocation hqloc = rc.senseHQLocation();
 			boolean hasMoved = false;
 			for (int d: directionOffsets){
 				Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
-				if(rc.canMove(lookingAtCurrently)){
-					Team teamOfMine = rc.senseMine(myLocation.add(lookingAtCurrently));
-					if(teamOfMine == null || teamOfMine == rc.getTeam()){
+				Team teamOfMine = rc.senseMine(rc.getLocation().add(lookingAtCurrently));
+				if(rc.canMove(lookingAtCurrently) && !rc.getLocation().add(lookingAtCurrently).isAdjacentTo(hqloc)){
+					if(teamOfMine == null || teamOfMine == this.rc.getTeam()){
 						if (this.movedFrom != lookingAtCurrently.opposite()){
 							this.movedFrom = lookingAtCurrently;
 							rc.move(lookingAtCurrently);
@@ -132,8 +147,8 @@ public class SRallyState extends State{
 						}
 						else{
 							continue;
-						}
 					}
+				}
 
 					else if(firstMine == null && teamOfMine!=rc.getTeam()){
 						firstMine = Direction.values()[lookingAtCurrently.ordinal()];
@@ -142,12 +157,32 @@ public class SRallyState extends State{
 			}
 			if(!hasMoved){
 				if(firstMine != null){
-					rc.defuseMine(myLocation.add(firstMine));
+					rc.defuseMine(rc.getLocation().add(firstMine));
 				}
-/*				else if (place.distanceSquaredTo(myLocation)>4){
-					rc.layMine();
-				}*/
 			}
 		}
 	}
+
+
+	private MapLocation findClosest(Robot[] robots, Team tm) throws GameActionException {
+		int closestDist = 1000000;
+		MapLocation closestBotLoc=null;
+		
+		int dist;
+		MapLocation loc;
+		for(Robot r : robots)
+			if(r == null)
+				continue;
+			else if(tm != null && r.getTeam() != tm)
+				continue;
+			else{
+				loc = this.rc.senseRobotInfo(r).location;
+				dist = loc.distanceSquaredTo(this.rc.getLocation());
+				if(dist < closestDist){
+					closestDist = dist;
+					closestBotLoc = loc;
+				}
+			}
+		return closestBotLoc;
+	}	
 }

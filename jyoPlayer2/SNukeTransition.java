@@ -6,8 +6,8 @@ public class SNukeTransition extends Transition {
 	
 	public SNukeTransition(StateMachine rootSM){
 		this.rootSM = rootSM;
-		this.sourceStates = new int[] {SMConstants.SWAITSTATE, SMConstants.SBUILDSTATE};
-		this.targetState = SMConstants.SRALLYSTATE;
+		this.sourceStates = new int[] {SMConstants.SWAITSTATE, SMConstants.SBUILDSTATE/*, SMConstants.SRALLYSTATE*/};
+		this.targetState = SMConstants.SATTACKSTATE;
 	}
 
 	@Override
@@ -24,7 +24,11 @@ public class SNukeTransition extends Transition {
 	@Override
 	public boolean isTriggered() {
 		try {
-			return rootSM.rc.senseEnemyNukeHalfDone();
+			if (rootSM.rc.readBroadcast(39842) == 186254){
+				PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP = 10;
+				return true;
+			}
+			return false;
 		} catch (GameActionException e) {return false;}
 	}
 

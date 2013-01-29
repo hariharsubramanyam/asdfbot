@@ -67,7 +67,7 @@ public class SAttackState extends State {
 						this.rc.setIndicatorString(1, "Going to enemy " + closestEnemy.toString());
 					}
 					else{
-						this.moveTogether(this.traditionalRallyPoint, alliedHQ, alliedRobots, enemyRobots, nearbyEnemyRobots, myLocation, enemyHQ);
+						this.goToLocation(enemyHQ);
 						this.rc.setIndicatorString(1,"Going to enemyHQ " + enemyHQ.toString());
 					}
 					return;
@@ -102,23 +102,6 @@ public class SAttackState extends State {
 			return this.rc.readBroadcast(PlayerConstants.ARTILLERY_IN_SIGHT_MESSAGE);
 		}
 		catch(Exception ex){ ex.printStackTrace(); return 0;}
-	}
-	
-	private void moveTogether(MapLocation toGo, MapLocation alliedHQ, Robot[] allies,Robot[] enemies,Robot[] nearbyEnemies,MapLocation myLocation, MapLocation enemyHQ) throws GameActionException {
-		//This robot will be attracted to the goal and repulsed from other things
-		Direction toTarget = myLocation.directionTo(toGo);
-		int targetWeighting = 10;
-		MapLocation goalLoc = myLocation.add(toTarget,targetWeighting);//toward target, TODO weighted by the distance?
-		goalLoc = goalLoc.add(myLocation.directionTo(enemyHQ));
-/*		goalLoc = goalLoc.add(myLocation.directionTo(enemyHQ),3);
-*/		MapLocation closestAlly = findClosest(allies, rc.getTeam());
-		goalLoc = goalLoc.add(myLocation.directionTo(closestAlly), 5);
-		//TODO repel from allied mines?
-		//now use that direction
-		Direction finalDir = myLocation.directionTo(goalLoc);
-/*		if (Math.random()<.1)
-			finalDir = finalDir.rotateRight();*/
-		goToLocation(myLocation.add(finalDir));
 	}
 	
 	private void goToLocation(MapLocation place)
