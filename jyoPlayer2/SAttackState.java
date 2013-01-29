@@ -67,7 +67,7 @@ public class SAttackState extends State {
 						this.rc.setIndicatorString(1, "Going to enemy " + closestEnemy.toString());
 					}
 					else{
-						this.moveTogether(enemyHQ, alliedHQ, alliedRobots, enemyRobots, nearbyEnemyRobots, myLocation, enemyHQ);
+						this.moveTogether(this.traditionalRallyPoint, alliedHQ, alliedRobots, enemyRobots, nearbyEnemyRobots, myLocation, enemyHQ);
 						this.rc.setIndicatorString(1,"Going to enemyHQ " + enemyHQ.toString());
 					}
 					return;
