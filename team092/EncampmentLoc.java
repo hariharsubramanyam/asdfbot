@@ -30,7 +30,7 @@ public class EncampmentLoc implements Comparable {
 		}
 	}
 
-
+	@Override
 	public int compareTo(Object other) {
 		if (!other.getClass().equals(this.getClass())){
 			return 1;
