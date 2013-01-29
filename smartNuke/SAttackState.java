@@ -8,11 +8,12 @@ public class SAttackState extends State {
 	public MapLocation enemyHQ, alliedHQ, myLocation;
 	public Robot[] alliedRobots, enemyRobots, nearbyEnemyRobots, nearbyAlliedRobots;
 	public MapLocation[] myEncamp;
-	
+	private int attackChannel = 9559;
 	public MapLocation cm;
 	public boolean inGroup;
 	public boolean attackNow;
 	public MapLocation traditionalRallyPoint;
+	public MapLocation toGo;
 	
 	public SAttackState(StateMachine rootSM){
 		this.stateID = SMConstants.SATTACKSTATE;
@@ -33,23 +34,27 @@ public class SAttackState extends State {
 	public void doAction(){
 		try{
 			if(rc.isActive()){
+				this.toGo = PlayerConstants.intToMapLocation(rc.readBroadcast(attackChannel));
 				rc.setIndicatorString(0, "Attack State.");
 				myLocation = rc.getLocation();
 				alliedRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam());
 				enemyRobots = rc.senseNearbyGameObjects(Robot.class, 100000,rc.getTeam().opponent());
 				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class, 4,rc.getTeam().opponent());
 				nearbyAlliedRobots = rc.senseNearbyGameObjects(Robot.class, PlayerConstants.NEARBY_ALLY_DIST_SQUARED,rc.getTeam());
-				int numSols = this.numSoldier(nearbyAlliedRobots);
+				/*int numSols = this.numSoldier(nearbyAlliedRobots);*/
 				myEncamp = rc.senseAlliedEncampmentSquares();
 				if(rc.readBroadcast(58621) == 498)
 					attackNow = true;
-				
 				if (attackNow){
-					goToLocation(enemyHQ);
+					goStraightToLocation(enemyHQ, myLocation);
 					return;
 				}
+				else if (this.toGo.equals(enemyHQ))
+					this.goToLocation(toGo);
+				else
+					this.goStraightToLocation(toGo, myLocation);
 					
-				if(this.isHQUnderAttack() && rc.getLocation().distanceSquaredTo(alliedHQ) < PlayerConstants.WITHIN_HQ_RESCUING_RANGE_SQUARED){
+/*				if(this.isHQUnderAttack() && rc.getLocation().distanceSquaredTo(alliedHQ) < PlayerConstants.WITHIN_HQ_RESCUING_RANGE_SQUARED){
 					this.goToLocation(alliedHQ);
 					return;
 				}
@@ -80,7 +85,7 @@ public class SAttackState extends State {
 						this.rc.setIndicatorString(1,"Going to enemyHQ " + enemyHQ.toString());
 					}
 					return;
-				}
+				}*/
 			}
 		}catch(Exception e){e.printStackTrace();}
 	}
@@ -148,6 +153,44 @@ public class SAttackState extends State {
 					rc.defuseMine(rc.getLocation().add(firstMine));
 				}
 			}
+		}
+	}
+	
+	private void goStraightToLocation(MapLocation place, MapLocation myLocation)
+			throws GameActionException {
+		int dist = myLocation.distanceSquaredTo(place);
+		if(dist > 0){
+			int[] directionOffsets = {0,1,-1};
+			Direction dir = myLocation.directionTo(place);
+/*			boolean hasMoved = false;
+*/			for (int d: directionOffsets){
+				Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
+				if(rc.canMove(lookingAtCurrently) && !rc.getLocation().add(lookingAtCurrently).isAdjacentTo(alliedHQ)){
+					Team teamOfMine = rc.senseMine(myLocation.add(lookingAtCurrently));
+					if(teamOfMine==null || teamOfMine == rc.getTeam()){
+						if (this.movedFrom != lookingAtCurrently.opposite()){
+							this.movedFrom = lookingAtCurrently;
+							rc.move(lookingAtCurrently);
+/*							hasMoved = true;
+*/							break;
+						}
+						else{
+							continue;
+						}
+					}
+					else{
+						if (this.movedFrom != lookingAtCurrently.opposite()){
+							rc.defuseMine(myLocation.add(lookingAtCurrently));
+						}
+						else{
+							continue;
+						}
+					}
+				}
+			}
+/*			if(!hasMoved){
+					rc.layMine();
+			}*/
 		}
 	}
 

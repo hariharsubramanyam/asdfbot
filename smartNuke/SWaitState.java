@@ -147,7 +147,7 @@ public class SWaitState extends State{
 			int patienceCounter = 0;
 			rc.senseMineLocations(myLocation, 2, rc.getTeam());
 			while(going != lastDirection && rc.canMove(going)){
-				int randNum = (int) ((Math.round(Math.random()*10))-1);
+				int randNum = (int) ((Math.round(Math.random()*20))-1);
 				if(randNum == 8 || randNum == 9){
 					going = myLocation.directionTo(enemyHQ);
 				}

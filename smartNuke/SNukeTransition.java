@@ -24,7 +24,7 @@ public class SNukeTransition extends Transition {
 	@Override
 	public boolean isTriggered() {
 		try {
-			if (rootSM.rc.readBroadcast(39843) == 186254){
+			if (rootSM.rc.readBroadcast(39947) == 186254){
 /*					PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP = 10;*/
 				return true;
 			}

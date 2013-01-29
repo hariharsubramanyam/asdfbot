@@ -58,9 +58,10 @@ public class SWaitState extends State{
 				Robot[] enemyRobots = rc.senseNearbyGameObjects(Robot.class, 14,rc.getTeam().opponent());
 
 				if(enemyRobots.length > 0){
-					MapLocation closestEnemy = findClosest(enemyRobots);
+/*					MapLocation closestEnemy = findClosest(enemyRobots);
 					MapLocation closestAlly = findClosest(alliedRobots);
-					surround(closestEnemy, closestAlly, myLocation);
+					surround(closestEnemy, closestAlly, myLocation);*/
+					this.rootSM.goToState(SMConstants.SRALLYSTATE);
 				}
 				
 				else{
@@ -126,10 +127,14 @@ public class SWaitState extends State{
 		MapLocation goalLoc = myLocation.add(toTarget,targetWeighting);//toward target, TODO weighted by the distance?
 		goalLoc = goalLoc.add(myLocation.directionTo(enemyHQ));
 		if (closestMine != null)
-			goalLoc = goalLoc.add(myLocation.directionTo(closestMine), -3);
+			goalLoc = goalLoc.add(myLocation.directionTo(closestMine), -8);
+		if (myLocation.distanceSquaredTo(this.rootSM.rc.senseHQLocation()) > 144)
+			goalLoc = goalLoc.add(myLocation.directionTo(alliedHQ), 10);
+		else
+			goalLoc = goalLoc.add(myLocation.directionTo(enemyHQ), 4);
 /*		goalLoc = goalLoc.add(myLocation.directionTo(enemyHQ),3);
 */		MapLocation closestAlly = findClosest(allies);
-		goalLoc = goalLoc.add(myLocation.directionTo(closestAlly), -8);
+		goalLoc = goalLoc.add(myLocation.directionTo(closestAlly), -4);
 		//TODO repel from allied mines?
 		//now use that direction
 		Direction finalDir = myLocation.directionTo(goalLoc);

@@ -13,6 +13,7 @@ public class SAttackState extends State {
 	public boolean inGroup;
 	public boolean attackNow;
 	public MapLocation traditionalRallyPoint;
+	public MapLocation toGo;
 	
 	public SAttackState(StateMachine rootSM){
 		this.stateID = SMConstants.SATTACKSTATE;
