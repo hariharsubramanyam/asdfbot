@@ -2,12 +2,10 @@
  * State for soldier state machine
  * Behavior - go to closest enemy or rally point
  */
-package team092;
+package noSMPlayer;
 
 
 import battlecode.common.*;
-
-import java.util.ArrayList;
 
 public class SWaitState extends State{
 	
@@ -15,27 +13,16 @@ public class SWaitState extends State{
 	public MapLocation enemyHQ;
 	public MapLocation alliedHQ;
 	public MapLocation myLocation;
-	public int mapWidth;
-	public int mapHeight;
-	public boolean edge;
 	public Robot[] alliedRobots;
 	public Robot[] enemyRobots;
 	public Robot[] nearbyEnemyRobots;
 	public MapLocation[] encamp;
-	public Direction lastDirection;
-	public MapLocation[] nearbyAlliedMines;
-	public MapLocation[] nearbyNeutralMines;
-	public ArrayList<MapLocation> nearbyMines;
-	public boolean outward;
+
 	// constructor
 	public SWaitState(StateMachine rootSM){
 		this.stateID = SMConstants.SWAITSTATE;
 		this.rootSM = rootSM;
 		this.rc = rootSM.getRC();
-		this.lastDirection = rc.getLocation().directionTo(rc.senseHQLocation());
-		this.mapHeight = rc.getMapHeight();
-		this.mapWidth = rc.getMapWidth();
-		this.outward = true;
 	}
 
 	// when we enter this state, we need to figure out where the rally point is
@@ -55,74 +42,33 @@ public class SWaitState extends State{
 					PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP = 10;
 					this.rootSM.goToState(SMConstants.SATTACKSTATE);
 				}*/
-				this.rc.setIndicatorString(0, "Wait State.");
+				rc.setIndicatorString(0, "Wait State.");
 				if(enemyHQ == null)
 					enemyHQ = rc.senseEnemyHQLocation();
 				if(alliedHQ == null)
 					alliedHQ = rc.senseHQLocation();
 				myLocation = rc.getLocation();
-				if (myLocation.x == 0 || myLocation.x == this.mapWidth-1 || myLocation.y == 0 || myLocation.y == this.mapHeight-1)
-					this.edge = true;
-				else
-					this.edge = false;
-				if (this.outward && (myLocation.distanceSquaredTo(alliedHQ) > 192 || this.edge))
-					this.outward = false;
-				if (!this.outward && myLocation.distanceSquaredTo(alliedHQ) < 16)
-					this.outward = true;
 				alliedRobots = rc.senseNearbyGameObjects(Robot.class,100000,rc.getTeam());
 				enemyRobots = rc.senseNearbyGameObjects(Robot.class, 100000,rc.getTeam().opponent());
 				nearbyEnemyRobots = rc.senseNearbyGameObjects(Robot.class,14,rc.getTeam().opponent());
 				encamp = rc.senseEncampmentSquares(rc.getLocation(), 100000, Team.NEUTRAL);
 				rc.setIndicatorString(0, "Wait state.");
-				nearbyAlliedMines = rc.senseMineLocations(myLocation, 2, rc.getTeam());
-				nearbyNeutralMines = rc.senseMineLocations(myLocation, 2, Team.NEUTRAL);
-				nearbyMines = new ArrayList<MapLocation>();
-				for(MapLocation mL: nearbyAlliedMines)
-					nearbyMines.add(mL);
-				for(MapLocation mL: nearbyNeutralMines)
-					nearbyMines.add(mL);
+				
 				MapLocation myLocation = rc.getLocation();
 				Robot[] enemyRobots = rc.senseNearbyGameObjects(Robot.class, 14,rc.getTeam().opponent());
 
 				if(enemyRobots.length > 0){
-					MapLocation closestEnemy = findClosest(enemyRobots);
+/*					MapLocation closestEnemy = findClosest(enemyRobots);
 					MapLocation closestAlly = findClosest(alliedRobots);
-					surround(closestEnemy, closestAlly, myLocation);
+					surround(closestEnemy, closestAlly, myLocation);*/
+					this.rootSM.goToState(SMConstants.SRALLYSTATE);
 				}
 				
 				else{
-					boolean northmine = false;
-					boolean eastmine = false;
-					boolean southmine = false;
-					boolean westmine = false;
-					boolean pickaxeEfficient = false;
-					if(rc.hasUpgrade(Upgrade.PICKAXE)){
-						pickaxeEfficient = true;
-						for (MapLocation mine: nearbyMines){
-							if (myLocation.directionTo(mine) == Direction.NORTH){
-								northmine = true;
-								continue;
-							}
-							if (myLocation.directionTo(mine) == Direction.EAST){
-								eastmine = true;
-								continue;
-							}
-							if (myLocation.directionTo(mine) == Direction.SOUTH){
-								southmine = true;
-								continue;
-							}
-							if (myLocation.directionTo(mine) == Direction.WEST){
-								westmine = true;
-								continue;
-							}
-						}
-						if(northmine&&eastmine&&southmine&&westmine)
-							pickaxeEfficient = false;
-					}
-					if (goodPlace(myLocation, alliedHQ, encamp)&&(rc.senseMine(myLocation)==null || pickaxeEfficient)&& myLocation.distanceSquaredTo(rc.senseHQLocation())>4 && !edge)
+					if (goodPlace(myLocation, alliedHQ, encamp)&&rc.senseMine(myLocation)==null && myLocation.distanceSquaredTo(rc.senseHQLocation())>4)
 						rc.layMine();
 					else
-						findPlacesToLayMines(alliedHQ, alliedRobots, enemyRobots, nearbyEnemyRobots, myLocation, enemyHQ, this.outward);
+						findPlacesToLayMines(alliedHQ, alliedRobots, enemyRobots, nearbyEnemyRobots, myLocation, enemyHQ);
 					
 				}
 			}
@@ -170,62 +116,31 @@ public class SWaitState extends State{
 	}
 	
 	//Movement system
-	private void findPlacesToLayMines(MapLocation alliedHQ, Robot[] allies,Robot[] enemies,Robot[] nearbyEnemies,MapLocation myLocation, MapLocation enemyHQ, boolean outward) throws GameActionException {
+	private void findPlacesToLayMines(MapLocation alliedHQ, Robot[] allies,Robot[] enemies,Robot[] nearbyEnemies,MapLocation myLocation, MapLocation enemyHQ) throws GameActionException {
 		//This robot will be attracted to the goal and repulsed from other things
-/*		MapLocation[] alliedMines = rc.senseMineLocations(myLocation, 600, rc.getTeam());
+		MapLocation[] alliedMines = rc.senseMineLocations(myLocation, 600, rc.getTeam());
 		MapLocation closestMine = null;
 		if (alliedMines.length > 0)
-			closestMine = findClosestMine(alliedMines);*/
-		Direction toTarget;
-		Direction going;
-		if (outward){
-			rc.setIndicatorString(1, "outward");
-			toTarget = myLocation.directionTo(alliedHQ).opposite();
-			int targetWeighting = targetWeight(myLocation.distanceSquaredTo(alliedHQ), enemyHQ, alliedHQ);
-			MapLocation goalLoc = myLocation.add(toTarget,targetWeighting);//toward target, TODO weighted by the distance?
-			goalLoc = goalLoc.add(myLocation.directionTo(enemyHQ),5);
-			MapLocation closestAlly = findClosest(allies);
-			goalLoc = goalLoc.add(myLocation.directionTo(closestAlly), -8);
-			//TODO repel from allied mines?
-			//now use that direction
-			going = myLocation.directionTo(goalLoc);
-			/*			int patienceCounter = 0;*/
-			int[] directionOffsets = {0,1,-1,2,-2,3,-3,4};
-			for (int d: directionOffsets){
-				boolean emptySquare = true;
-				Direction lookingAtCurrently = Direction.values()[(myLocation.directionTo(goalLoc).ordinal()+d+8)%8];
-				for (MapLocation mine: nearbyMines){
-					if (lookingAtCurrently == myLocation.directionTo(mine)){
-						emptySquare = false;
-						break;
-					}
-				}
-				if (emptySquare == true && rc.canMove(lookingAtCurrently) && !rc.getLocation().add(lookingAtCurrently).isAdjacentTo(alliedHQ)){
-					going = lookingAtCurrently;
-					break;
-				}
-			}
-			/*			while(going != lastDirection && rc.canMove(going)){
-				int randNum = (int) ((Math.round(Math.random()*20))-1);
-				if(randNum == 8 || randNum == 9){
-					going = myLocation.directionTo(enemyHQ);
-				}
-				else{
-					going = Direction.values()[randNum];
-				}
-				if(patienceCounter > 8){
-					return;
-				}
-				patienceCounter++;
-			}*/
-			/*			lastDirection = going.opposite();*/
-		}
-		else{
-			rc.setIndicatorString(1, "inward");
-			going = myLocation.directionTo(alliedHQ);
-		}
-		goStraightToLocation(myLocation.add(going), myLocation);
-
+			closestMine = findClosestMine(alliedMines);
+		Direction toTarget = myLocation.directionTo(alliedHQ).opposite();
+		int targetWeighting = targetWeight(myLocation.distanceSquaredTo(alliedHQ), enemyHQ, alliedHQ);
+		MapLocation goalLoc = myLocation.add(toTarget,targetWeighting);//toward target, TODO weighted by the distance?
+		goalLoc = goalLoc.add(myLocation.directionTo(enemyHQ));
+		if (closestMine != null)
+			goalLoc = goalLoc.add(myLocation.directionTo(closestMine), -8);
+		if (myLocation.distanceSquaredTo(this.rootSM.rc.senseHQLocation()) > 144)
+			goalLoc = goalLoc.add(myLocation.directionTo(alliedHQ), 10);
+		else
+			goalLoc = goalLoc.add(myLocation.directionTo(enemyHQ), 4);
+/*		goalLoc = goalLoc.add(myLocation.directionTo(enemyHQ),3);
+*/		MapLocation closestAlly = findClosest(allies);
+		goalLoc = goalLoc.add(myLocation.directionTo(closestAlly), -4);
+		//TODO repel from allied mines?
+		//now use that direction
+		Direction finalDir = myLocation.directionTo(goalLoc);
+/*		if (Math.random()<.1)
+			finalDir = finalDir.rotateRight();*/
+		goStraightToLocation(myLocation.add(finalDir), myLocation);
 	}
 	
 	private static int targetWeight(int dSquared, MapLocation enemyHQ, MapLocation alliedHQ){
@@ -334,8 +249,8 @@ public class SWaitState extends State{
 		if(dist > 0){
 			int[] directionOffsets = {0,1,-1};
 			Direction dir = myLocation.directionTo(place);
-			boolean hasMoved = false;
-			for (int d: directionOffsets){
+/*			boolean hasMoved = false;
+*/			for (int d: directionOffsets){
 				Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
 				if(rc.canMove(lookingAtCurrently) && !rc.getLocation().add(lookingAtCurrently).isAdjacentTo(alliedHQ)){
 					Team teamOfMine = rc.senseMine(myLocation.add(lookingAtCurrently));
@@ -343,8 +258,8 @@ public class SWaitState extends State{
 						if (this.movedFrom != lookingAtCurrently.opposite()){
 							this.movedFrom = lookingAtCurrently;
 							rc.move(lookingAtCurrently);
-							hasMoved = true;
-							break;
+/*							hasMoved = true;
+*/							break;
 						}
 						else{
 							continue;

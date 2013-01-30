@@ -1,4 +1,4 @@
-package team092;
+package noSMPlayer;
 
 import battlecode.common.*;
 
@@ -8,7 +8,7 @@ public class SAttackState extends State {
 	public MapLocation enemyHQ, alliedHQ, myLocation;
 	public Robot[] alliedRobots, enemyRobots, nearbyEnemyRobots, nearbyAlliedRobots;
 	public MapLocation[] myEncamp;
-	private int attackChannel = 9559;
+	private int attackChannel = 9557;
 	public MapLocation cm;
 	public boolean inGroup;
 	public boolean attackNow;

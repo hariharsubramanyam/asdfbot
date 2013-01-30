@@ -1,12 +1,12 @@
 /**
  * State machine for the soldier
  */
-package team092;
+package noSMPlayer;
 import battlecode.common.*;
 
 
 public class SoldierSM extends StateMachine {
-	private int encampChannel = 9569;
+	private int encampChannel = 9551;
 
 	// Construct and set initial state
 	public SoldierSM(RobotController rc){

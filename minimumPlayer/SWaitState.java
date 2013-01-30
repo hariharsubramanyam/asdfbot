@@ -2,7 +2,7 @@
  * State for soldier state machine
  * Behavior - go to closest enemy or rally point
  */
-package team092;
+package minimumPlayer;
 
 
 import battlecode.common.*;

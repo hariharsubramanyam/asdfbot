@@ -1,4 +1,4 @@
-package team092;
+package minimumPlayer;
 
 import battlecode.common.MapLocation;
 import battlecode.common.Robot;

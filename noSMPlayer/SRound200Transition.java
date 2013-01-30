@@ -1,4 +1,4 @@
-package team092;
+package noSMPlayer;
 
 import battlecode.common.Clock;
 
@@ -25,7 +25,7 @@ public class SRound200Transition extends Transition {
 
 	@Override
 	public boolean isTriggered() {
-		return (Clock.getRoundNum()%500 == 0);
+		return (Clock.getRoundNum()%200 == 0);
 	}
 
 }

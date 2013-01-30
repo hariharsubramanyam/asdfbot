@@ -2,7 +2,7 @@
  * State for soldier state machine
  * Behavior - go to closest enemy or rally point
  */
-package team092;
+package noSMPlayer;
 
 
 import java.util.ArrayList;
@@ -11,7 +11,7 @@ import battlecode.common.*;
 
 public class SBuildState extends State{
 	
-	private int encampChannel = 9569;
+	private int encampChannel = 9551;
 	private MapLocation encampTarget;
 	private int encampType;
 	
@@ -39,7 +39,7 @@ public class SBuildState extends State{
 	@Override
 	public void doEntryAct() {
 		try {
-			this.rc.setIndicatorString(0, "Build State.");
+			rc.setIndicatorString(0, "Build State.");
 			if (rc.readBroadcast(encampChannel) > 999999){
 				String broadcast = rc.readBroadcast(encampChannel)+"";
 				encampTarget = new MapLocation(Integer.parseInt(broadcast.substring(4, 7)),Integer.parseInt(broadcast.substring(1, 4)));
@@ -49,7 +49,6 @@ public class SBuildState extends State{
 		} catch (GameActionException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			System.out.println("PROBLEM! PROBLEM! PROBLEM! PROBLEM! PROBLEM! PROBLEM! PROBLEM! PROBLEM! ");
 		}
 	}
 	// no exit work
@@ -292,17 +291,17 @@ public class SBuildState extends State{
 		if(dist > 0){
 			int[] directionOffsets = {0,1,-1};
 			Direction dir = myLocation.directionTo(place);
-			boolean hasMoved = false;
-			for (int d: directionOffsets){
+/*			boolean hasMoved = false;
+*/			for (int d: directionOffsets){
 				Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
-				if(rc.canMove(lookingAtCurrently) ){//&& !rc.getLocation().add(lookingAtCurrently).isAdjacentTo(alliedHQ)){
+				if(rc.canMove(lookingAtCurrently) && !rc.getLocation().add(lookingAtCurrently).isAdjacentTo(alliedHQ)){
 					Team teamOfMine = rc.senseMine(myLocation.add(lookingAtCurrently));
 					if(teamOfMine==null || teamOfMine == rc.getTeam()){
 						if (this.movedFrom != lookingAtCurrently.opposite()){
 							this.movedFrom = lookingAtCurrently;
 							rc.move(lookingAtCurrently);
-							hasMoved = true;
-							break;
+/*							hasMoved = true;
+*/							break;
 						}
 						else{
 							continue;

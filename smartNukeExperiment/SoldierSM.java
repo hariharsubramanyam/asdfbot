@@ -1,7 +1,7 @@
 /**
  * State machine for the soldier
  */
-package team092;
+package smartNukeExperiment;
 import battlecode.common.*;
 
 
