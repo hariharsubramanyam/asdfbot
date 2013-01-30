@@ -3,6 +3,7 @@ package smartNuke;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.PriorityQueue;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -21,6 +22,13 @@ public class HDefaultState extends State{
 	public Robot[] nearbyRobots;
 	public boolean nukeMode;
 	private ArrayList<EncampmentLoc> encampmentsToCapture;
+	public MapLocation[] encamp;
+	public MapLocation[] alliedEncamp;
+	public ArrayList<MapLocation> alliedEncamps;
+	public PriorityQueue<EncampmentSquare> openencamps;
+	public int encCount = 0;
+	public int artCount = 0;
+	public int encampTurns = 0;
 	private int lastBroadcast;
 	private int encampChannel = 9569;
 	private int attackChannel = 9559;
@@ -39,6 +47,8 @@ public class HDefaultState extends State{
 	public int timeNuke;
 	public int timeEnemyNuke;
 	public int nukeChangeDelay;
+	public int numWaitBots = 0;
+	public double teamPower;
 	
 	public HDefaultState(StateMachine rootSM){
 		this.stateID = SMConstants.HDEFAULTSTATE;
@@ -47,8 +57,8 @@ public class HDefaultState extends State{
 		this.myLocation = rc.getLocation();
 		this.enemyHQ = rc.senseEnemyHQLocation();
 		nukeMode = false;
-		setEncampmentsToCapture();
-		lastBroadcast = 9999999;
+/*		setEncampmentsToCapture();
+*/		lastBroadcast = 9999999;
 		this.nukeHalfDone = false;
 		this.enemyNukeHalfDone = false;
 		this.setToAttack = false;
@@ -64,29 +74,57 @@ public class HDefaultState extends State{
 		nukeChangeDelay = 10000000;
 	}
 	
-	public void sendCenterOfMassMessage(MapLocation loc){
-		int x = loc.x;
-		int y = loc.y;
-		String msg = "1";
-		if(y < 10)
-			msg += "00"+y;
-		else if(y < 100)
-			msg += "0"+y;
-		else
-			msg += y;
-		
-		msg += "0";
-		
-		if(x < 10)
-			msg += "00" + x;
-		else if(x < 100)
-			msg += "0" + x;
-		else
-			msg += x;
-		this.rc.setIndicatorString(0, msg);
+	public PriorityQueue<EncampmentSquare> sortencamps(MapLocation[] encamp, ArrayList<MapLocation> alliedEncamps){
+		PriorityQueue<EncampmentSquare> sortencamps = new PriorityQueue<EncampmentSquare>();
+		for(MapLocation mL : encamp){
+			EncampmentSquare currEncamp = new EncampmentSquare(mL.distanceSquaredTo(myLocation), mL);
+			if(!isTaken(currEncamp, alliedEncamps) && mL.distanceSquaredTo(myLocation) > 3 && mL.distanceSquaredTo(enemyHQ) >= 2*mL.distanceSquaredTo(myLocation) && alliedEncamps.size() < 7){
+				sortencamps.add(currEncamp);
+			}
+		}
+/*		this.rc.setIndicatorString(0,sortencamps.toString());
+*/		return sortencamps;
+	}
+	
+	public boolean isTaken(EncampmentSquare target, ArrayList<MapLocation> alliedEncamps){
 		try {
-			this.rc.broadcast(PlayerConstants.HQ_CENTER_OF_MASS_CHANNEL, Integer.parseInt(msg));
-		} catch (GameActionException e) {e.printStackTrace();}
+			MapLocation targLoc = target.location;
+			int msgInt = 0;
+			int channel = 13*target.location.x*target.location.x+5*target.location.y+3+PlayerConstants.BEING_TAKEN_CHANNEL;
+			msgInt = this.rc.readBroadcast(channel);
+			
+			if(alliedEncamps.contains(targLoc))
+				return true;
+
+			else if(msgInt == 19541235)
+				return true;
+			
+			else if(msgInt == 19541275){
+				if (encampTurns <= 25){
+					encampTurns++;
+					return true;
+				}
+				else{
+					encampTurns = 0;
+					return false;
+				}
+/*				MapLocation targLoc = PlayerConstants.intToMapLocation(msgInt);
+				return target.equals(new EncampmentSquare(targLoc.distanceSquaredTo(alliedHQ),targLoc));*/
+			}
+			
+			else
+				return false;
+		} catch (GameActionException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public ArrayList<MapLocation> sortedEncamps (PriorityQueue<EncampmentSquare> sortencamps){
+		ArrayList<MapLocation> sortedEncamps = new ArrayList<MapLocation>();
+		for (EncampmentSquare e : sortencamps)
+			sortedEncamps.add(e.location);
+		return sortedEncamps;
 	}
 	
 	@Override
@@ -98,10 +136,6 @@ public class HDefaultState extends State{
 	@Override
 	public void doAction() {
 		try{
-			if(rc.readBroadcast(encampChannel) != lastBroadcast){
-				lastBroadcast = createNextBroadcast();
-				rc.broadcast(encampChannel, lastBroadcast);
-			}
 			if(!this.nukeHalfDone && rc.checkResearchProgress(Upgrade.NUKE) > 200 && !this.nukeHalfDone){
 				this.nukeHalfDone = true;
 				this.timeNuke = Clock.getRoundNum();
@@ -172,10 +206,10 @@ public class HDefaultState extends State{
 				rc.broadcast(this.attackChannel, toGoLoc);
 				if (!rc.hasUpgrade(Upgrade.DEFUSION))
 					rc.researchUpgrade(Upgrade.DEFUSION);
-				else if(rc.getTeamPower()<100.0 && !rc.hasUpgrade(Upgrade.PICKAXE))
+				else if(teamPower<100.0 && !rc.hasUpgrade(Upgrade.PICKAXE))
 					rc.researchUpgrade(Upgrade.PICKAXE);
 				else
-					if (rc.getTeamPower() < 100){
+					if (teamPower < 100){
 						PlayerConstants.NUM_ROBOTS_IN_ATTACK_GROUP = 10;
 /*						if (rc.readBroadcast(58621) != 498)
 							rc.broadcast(58621, 498);*/
@@ -193,6 +227,41 @@ public class HDefaultState extends State{
 					}
 			}
 			else{
+				/*			if(rc.readBroadcast(encampChannel) != lastBroadcast){
+				lastBroadcast = createNextBroadcast();
+				rc.broadcast(encampChannel, lastBroadcast);
+			}*/
+
+				alliedEncamp = rc.senseAlliedEncampmentSquares();
+				alliedEncamps = new ArrayList<MapLocation>();
+				teamPower = rc.getTeamPower();
+				for(MapLocation l : alliedEncamp)
+					alliedEncamps.add(l);
+
+				encamp = rc.senseEncampmentSquares(rc.getLocation(), 100000, Team.NEUTRAL);
+				openencamps = sortencamps(encamp, alliedEncamps);
+				double hqDis = myLocation.distanceSquaredTo(enemyHQ);
+
+				int maxArts = Math.min(6, Math.round((float)openencamps.size()/4));
+				
+				if (openencamps.size() > 0){
+					for (EncampmentSquare e: openencamps){
+						int locVsEnemyHQ = e.location.distanceSquaredTo(enemyHQ);
+						if(e.location.distanceSquaredTo(myLocation)<170 && artCount<maxArts && locVsEnemyHQ<hqDis+8){
+							e.setType(2);
+						}
+						else{
+							if(encCount%3 == 0){
+								e.setType(3);
+							}
+							else{
+								e.setType(4);
+							}
+						}
+						encCount++;
+					}
+				}
+
 				int nearbyAllies = rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), 625, rc.getTeam()).length;
 				if(!rc.hasUpgrade(Upgrade.PICKAXE) && nearbyAllies == PlayerConstants.NUM_ROBOTS_IN_DEFEND_GROUP){
 					rc.researchUpgrade(Upgrade.PICKAXE);
@@ -207,7 +276,7 @@ public class HDefaultState extends State{
 						this.rc.researchUpgrade(Upgrade.NUKE);
 					else
 						this.rc.researchUpgrade(Upgrade.PICKAXE);
-				else if(rc.getTeamPower() < 100)
+				else if(teamPower < 100)
 					this.rc.researchUpgrade(Upgrade.NUKE);
 				else
 					spawnSoldier();
@@ -229,6 +298,27 @@ public class HDefaultState extends State{
 				if(teamOfMine == null || teamOfMine == rc.getTeam()){
 					try {
 						rc.spawn(lookingAtCurrently);
+						if (Clock.getRoundNum() < 200){
+							if (openencamps.size() > 0){
+								rc.broadcast(PlayerConstants.STATE_ASSIGNMENT_CHANNEL,1);
+								this.rc.broadcast(PlayerConstants.ENCAMPMENT_LOCATION_CHANNEL, PlayerConstants.encampmentSquareToInt(openencamps.remove()));
+								numWaitBots = 0;
+							}
+							else{
+								rc.broadcast(PlayerConstants.STATE_ASSIGNMENT_CHANNEL,2);
+								numWaitBots++;
+							}
+						}
+						else{
+							if (numWaitBots >= 9 && openencamps.size() > 0){
+								rc.broadcast(PlayerConstants.STATE_ASSIGNMENT_CHANNEL,1);
+								numWaitBots = 0;
+							}
+							else{
+								rc.broadcast(PlayerConstants.STATE_ASSIGNMENT_CHANNEL,2);
+								numWaitBots++;
+							}
+						}
 					} catch (GameActionException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
