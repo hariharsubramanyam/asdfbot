@@ -1,4 +1,4 @@
-package team092;
+package smartNukeExperiment;
 
 import battlecode.common.Clock;
 

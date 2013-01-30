@@ -1,4 +1,4 @@
-package smartNuke;
+package smartNukeExperiment;
 
 
 import java.util.ArrayList;
@@ -224,17 +224,14 @@ public class HDefaultState extends State{
 		int[] directionOffsets = {0,1,-1,2,-2,3,-3,4};
 		for(int d : directionOffsets){
 			Direction lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
-			if (rc.canMove(lookingAtCurrently)&&Clock.getRoundNum()>0){
-				Team teamOfMine = rc.senseMine(myLocation.add(lookingAtCurrently));
-				if(teamOfMine == null || teamOfMine == rc.getTeam()){
-					try {
-						rc.spawn(lookingAtCurrently);
-						break;
-					} catch (GameActionException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+			if (rc.canMove(lookingAtCurrently) && rc.senseMine(rc.getLocation().add(lookingAtCurrently)) == null &&Clock.getRoundNum()>0){
+				try {
+					rc.spawn(lookingAtCurrently);
+				} catch (GameActionException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
+				break;
 			}
 		}
 	}
